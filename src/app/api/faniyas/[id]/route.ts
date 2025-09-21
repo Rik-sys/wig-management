@@ -90,15 +90,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 // GET - קבלת פאנית ספציפית
-export async function GET(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
+    
     const faniya = await prisma.faniya.findUnique({
       where: {
-        id: params.id
+        id: id
       },
       include: {
         _count: {
@@ -128,16 +131,14 @@ export async function GET(
 }
 
 // PUT - עדכון פאנית
-export async function PUT(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const updateData = await request.json();
 
     const faniya = await prisma.faniya.update({
       where: {
-        id: params.id
+        id: id
       },
       data: updateData,
       include: {
@@ -161,14 +162,13 @@ export async function PUT(
 }
 
 // DELETE - מחיקת פאנית
-export async function DELETE(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
+    
     await prisma.faniya.delete({
       where: {
-        id: params.id
+        id: id
       }
     });
 

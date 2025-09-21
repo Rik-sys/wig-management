@@ -104,15 +104,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { updateFaniyaDebt } from '@/lib/utils';
 
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 // GET - קבלת הזמנה ספציפית
-export async function GET(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
+    
     const order = await prisma.order.findUnique({
       where: {
-        id: params.id
+        id: id
       },
       include: {
         faniya: {
@@ -141,27 +144,23 @@ export async function GET(
 }
 
 // PUT - עדכון הזמנה
-export async function PUT(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const updateData = await request.json();
 
-    // אם מעדכנים תאריך מסירה - לסמן כמוכן
     if (updateData.deliveryDate) {
       updateData.isCompleted = true;
       updateData.deliveryDate = new Date(updateData.deliveryDate);
     }
 
-    // אם מבטלים תאריך מסירה - לסמן כלא מוכן
     if (updateData.deliveryDate === null) {
       updateData.isCompleted = false;
     }
 
     const order = await prisma.order.update({
       where: {
-        id: params.id
+        id: id
       },
       data: updateData,
       include: {
@@ -173,7 +172,6 @@ export async function PUT(
       }
     });
 
-    // עדכון חוב הפאנית
     await updateFaniyaDebt(order.faniyaId);
 
     return NextResponse.json(order);
@@ -187,18 +185,16 @@ export async function PUT(
 }
 
 // DELETE - מחיקת הזמנה
-export async function DELETE(
-  request: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
+    
     const order = await prisma.order.delete({
       where: {
-        id: params.id
+        id: id
       }
     });
 
-    // עדכון חוב הפאנית
     await updateFaniyaDebt(order.faniyaId);
 
     return NextResponse.json({ message: 'הזמנה נמחקה בהצלחה' });

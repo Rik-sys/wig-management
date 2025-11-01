@@ -272,6 +272,244 @@
 //     </Card>
 //   );
 // }
+// 'use client';
+
+// import { useState } from 'react';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Button } from '@/components/ui/button';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { Textarea } from '@/components/ui/textarea';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { PlusCircle, Trash2, CreditCard } from 'lucide-react';
+
+// interface PaymentPart {
+//   id: string;
+//   amount: string;
+//   paymentType: 'מזומן' | 'צ\'ק' | 'העברה בנקאית';
+//   checkNumber?: string;
+//   checkDueDate?: string;
+//   bankReference?: string;
+// }
+
+// interface CompoundPaymentFormProps {
+//   faniyaId: string;
+//   onSubmit: (paymentData: any) => void;
+//   onCancel: () => void;
+// }
+
+// export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPaymentFormProps) {
+//   const [paymentParts, setPaymentParts] = useState<PaymentPart[]>([
+//     { id: '1', amount: '', paymentType: 'מזומן' }
+//   ]);
+//   const [generalNotes, setGeneralNotes] = useState('');
+
+//   const addPaymentPart = () => {
+//     setPaymentParts([...paymentParts, {
+//       id: Date.now().toString(),
+//       amount: '',
+//       paymentType: 'מזומן'
+//     }]);
+//   };
+
+//   const removePaymentPart = (id: string) => {
+//     if (paymentParts.length > 1) {
+//       setPaymentParts(paymentParts.filter(part => part.id !== id));
+//     }
+//   };
+
+//   const updatePaymentPart = (id: string, field: keyof PaymentPart, value: string) => {
+//     setPaymentParts(paymentParts.map(part => 
+//       part.id === id ? { ...part, [field]: value } : part
+//     ));
+//   };
+
+//   const calculateTotal = () => {
+//     return paymentParts.reduce((sum, part) => sum + (parseFloat(part.amount) || 0), 0);
+//   };
+
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+    
+//     const validParts = paymentParts.filter(part => parseFloat(part.amount) > 0);
+//     if (validParts.length === 0) {
+//       alert('אנא הוסף לפחות חלק תשלום אחד עם סכום');
+//       return;
+//     }
+
+//     const checksWithoutDetails = validParts.filter(part => 
+//       part.paymentType === 'צ\'ק' && (!part.checkNumber || !part.checkDueDate)
+//     );
+//     if (checksWithoutDetails.length > 0) {
+//       alert('אנא מלא מספר צ\'ק ותאריך פרעון לכל הצ\'קים');
+//       return;
+//     }
+
+//     const transfersWithoutRef = validParts.filter(part => 
+//       part.paymentType === 'העברה בנקאית' && !part.bankReference
+//     );
+//     if (transfersWithoutRef.length > 0) {
+//       alert('אנא מלא מספר אסמכתא לכל ההעברות הבנקאיות');
+//       return;
+//     }
+
+//     const paymentData = {
+//       faniyaId,
+//       totalAmount: calculateTotal(),
+//       notes: generalNotes,
+//       paymentParts: validParts.map(part => ({
+//         amount: parseFloat(part.amount),
+//         paymentType: part.paymentType,
+//         checkNumber: part.checkNumber || null,
+//         checkDueDate: part.checkDueDate ? new Date(part.checkDueDate) : null,
+//         bankReference: part.bankReference || null,
+//         notes: null
+//       }))
+//     };
+
+//     onSubmit(paymentData);
+//   };
+
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <CardTitle className="flex items-center justify-between">
+//           <span className="flex items-center gap-2">
+//             <CreditCard className="w-5 h-5" />
+//             תשלום חדש
+//           </span>
+//           <span className="text-lg font-bold text-blue-600">
+//             סה"כ: ₪{calculateTotal().toFixed(2)}
+//           </span>
+//         </CardTitle>
+//       </CardHeader>
+//       <CardContent>
+//         <form onSubmit={handleSubmit} className="space-y-4">
+          
+//           {/* טבלת חלקי תשלום */}
+//           <div className="space-y-3">
+//             <div className="flex justify-between items-center">
+//               <Label>חלקי התשלום</Label>
+//               <Button type="button" onClick={addPaymentPart} size="sm" variant="outline">
+//                 <PlusCircle className="w-4 h-4 mr-1" />
+//                 הוסף
+//               </Button>
+//             </div>
+
+//             <div className="border rounded-lg overflow-hidden">
+//               <table className="w-full text-sm">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="p-2 text-right">סוג</th>
+//                     <th className="p-2 text-right">סכום</th>
+//                     <th className="p-2 text-right">פרטים</th>
+//                     <th className="p-2 w-12"></th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {paymentParts.map((part) => (
+//                     <tr key={part.id} className="border-t">
+//                       <td className="p-2">
+//                         <Select 
+//                           value={part.paymentType} 
+//                           onValueChange={(value: any) => updatePaymentPart(part.id, 'paymentType', value)}
+//                         >
+//                           <SelectTrigger className="h-8">
+//                             <SelectValue />
+//                           </SelectTrigger>
+//                           <SelectContent>
+//                             <SelectItem value="מזומן">💵 מזומן</SelectItem>
+//                             <SelectItem value="צ'ק">🧾 צ'ק</SelectItem>
+//                             <SelectItem value="העברה בנקאית">🏦 העברה</SelectItem>
+//                           </SelectContent>
+//                         </Select>
+//                       </td>
+//                       <td className="p-2">
+//                         <Input
+//                           type="number"
+//                           step="0.01"
+//                           value={part.amount}
+//                           onChange={(e) => updatePaymentPart(part.id, 'amount', e.target.value)}
+//                           placeholder="0.00"
+//                           className="h-8"
+//                           required
+//                         />
+//                       </td>
+//                       <td className="p-2">
+//                         {part.paymentType === 'צ\'ק' && (
+//                           <div className="flex gap-1">
+//                             <Input
+//                               value={part.checkNumber || ''}
+//                               onChange={(e) => updatePaymentPart(part.id, 'checkNumber', e.target.value)}
+//                               placeholder="מס' צ'ק"
+//                               className="h-8 text-xs"
+//                               required
+//                             />
+//                             <Input
+//                               type="date"
+//                               value={part.checkDueDate || ''}
+//                               onChange={(e) => updatePaymentPart(part.id, 'checkDueDate', e.target.value)}
+//                               className="h-8 text-xs"
+//                               required
+//                             />
+//                           </div>
+//                         )}
+//                         {part.paymentType === 'העברה בנקאית' && (
+//                           <Input
+//                             value={part.bankReference || ''}
+//                             onChange={(e) => updatePaymentPart(part.id, 'bankReference', e.target.value)}
+//                             placeholder="אסמכתא"
+//                             className="h-8 text-xs"
+//                             required
+//                           />
+//                         )}
+//                       </td>
+//                       <td className="p-2">
+//                         {paymentParts.length > 1 && (
+//                           <Button
+//                             type="button"
+//                             onClick={() => removePaymentPart(part.id)}
+//                             size="sm"
+//                             variant="ghost"
+//                             className="h-8 w-8 p-0"
+//                           >
+//                             <Trash2 className="w-4 h-4 text-red-500" />
+//                           </Button>
+//                         )}
+//                       </td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+
+//           {/* הערות */}
+//           <div>
+//             <Label>הערות</Label>
+//             <Textarea
+//               value={generalNotes}
+//               onChange={(e) => setGeneralNotes(e.target.value)}
+//               placeholder="הערות נוספות"
+//               rows={2}
+//               className="text-sm"
+//             />
+//           </div>
+
+//           {/* כפתורים */}
+//           <div className="flex justify-end gap-2 pt-2">
+//             <Button type="button" variant="outline" onClick={onCancel}>
+//               ביטול
+//             </Button>
+//             <Button type="submit" disabled={calculateTotal() === 0}>
+//               שמור (₪{calculateTotal().toFixed(2)})
+//             </Button>
+//           </div>
+//         </form>
+//       </CardContent>
+//     </Card>
+//   );
+// }
 'use client';
 
 import { useState } from 'react';
@@ -371,10 +609,10 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
   };
 
   return (
-    <Card>
+    <Card className="direction-rtl text-right">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
+        <CardTitle className="flex flex-row-reverse items-center justify-between">
+          <span className="flex flex-row-reverse items-center gap-2">
             <CreditCard className="w-5 h-5" />
             תשלום חדש
           </span>
@@ -384,25 +622,25 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 direction-rtl text-right">
           
           {/* טבלת חלקי תשלום */}
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-row-reverse justify-between items-center">
               <Label>חלקי התשלום</Label>
               <Button type="button" onClick={addPaymentPart} size="sm" variant="outline">
-                <PlusCircle className="w-4 h-4 mr-1" />
+                <PlusCircle className="w-4 h-4 ml-1" />
                 הוסף
               </Button>
             </div>
 
             <div className="border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm text-right">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="p-2 text-right">סוג</th>
-                    <th className="p-2 text-right">סכום</th>
-                    <th className="p-2 text-right">פרטים</th>
+                    <th className="p-2">סוג</th>
+                    <th className="p-2">סכום</th>
+                    <th className="p-2">פרטים</th>
                     <th className="p-2 w-12"></th>
                   </tr>
                 </thead>
@@ -414,9 +652,7 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
                           value={part.paymentType} 
                           onValueChange={(value: any) => updatePaymentPart(part.id, 'paymentType', value)}
                         >
-                          <SelectTrigger className="h-8">
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-8 text-right" />
                           <SelectContent>
                             <SelectItem value="מזומן">💵 מזומן</SelectItem>
                             <SelectItem value="צ'ק">🧾 צ'ק</SelectItem>
@@ -431,25 +667,25 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
                           value={part.amount}
                           onChange={(e) => updatePaymentPart(part.id, 'amount', e.target.value)}
                           placeholder="0.00"
-                          className="h-8"
+                          className="h-8 text-right"
                           required
                         />
                       </td>
                       <td className="p-2">
                         {part.paymentType === 'צ\'ק' && (
-                          <div className="flex gap-1">
+                          <div className="flex flex-row-reverse gap-1">
                             <Input
                               value={part.checkNumber || ''}
                               onChange={(e) => updatePaymentPart(part.id, 'checkNumber', e.target.value)}
                               placeholder="מס' צ'ק"
-                              className="h-8 text-xs"
+                              className="h-8 text-xs text-right"
                               required
                             />
                             <Input
                               type="date"
                               value={part.checkDueDate || ''}
                               onChange={(e) => updatePaymentPart(part.id, 'checkDueDate', e.target.value)}
-                              className="h-8 text-xs"
+                              className="h-8 text-xs text-right"
                               required
                             />
                           </div>
@@ -459,7 +695,7 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
                             value={part.bankReference || ''}
                             onChange={(e) => updatePaymentPart(part.id, 'bankReference', e.target.value)}
                             placeholder="אסמכתא"
-                            className="h-8 text-xs"
+                            className="h-8 text-xs text-right"
                             required
                           />
                         )}
@@ -492,12 +728,12 @@ export function CompoundPaymentForm({ faniyaId, onSubmit, onCancel }: CompoundPa
               onChange={(e) => setGeneralNotes(e.target.value)}
               placeholder="הערות נוספות"
               rows={2}
-              className="text-sm"
+              className="text-sm text-right"
             />
           </div>
 
           {/* כפתורים */}
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex flex-row-reverse justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onCancel}>
               ביטול
             </Button>

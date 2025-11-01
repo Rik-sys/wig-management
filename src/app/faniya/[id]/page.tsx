@@ -4239,27 +4239,43 @@ export default function FaniyaPage() {
     }
   };
 
-  const fetchPricing = async () => {
-    try {
-      const response = await fetch('/api/pricing');
-      if (response.ok) {
-        const data = await response.json();
-        setSkinTypePrices({
-          'רגיל': data.regular || 15,
-          'מאוורר': data.fan || 18
-        });
-      }
-    } catch (error) {
-      console.error('שגיאה בטעינת מחירים:', error);
-    }
-  };
+// במקום skinTypePrices, השתמש בזה:
+const [pricingRanges, setPricingRanges] = useState<any[]>([]);
+const [fanSupplement, setFanSupplement] = useState(1000);
 
-  const calculatePrice = () => {
-    const length = parseInt(orderForm.length) || 0;
-    const pricePerCm = skinTypePrices[orderForm.skinType as keyof typeof skinTypePrices];
-    const discount = parseFloat(orderForm.discount) || 0;
-    return Math.max(0, (length * pricePerCm) - discount);
-  };
+const fetchPricing = async () => {
+  try {
+    const response = await fetch('/api/pricing');
+    if (response.ok) {
+      const data = await response.json();
+      setPricingRanges(data.regularRanges || []);
+      setFanSupplement(data.fanSupplement || 1000);
+    }
+  } catch (error) {
+    console.error('שגיאה בטעינת מחירים:', error);
+  }
+};
+
+const calculatePrice = () => {
+  const length = parseInt(orderForm.length) || 0;
+  const discount = parseFloat(orderForm.discount) || 0;
+  
+  // מציאת הטווח המתאים
+  const range = pricingRanges.find(r => length >= r.minLength && length <= r.maxLength);
+  
+  if (!range) {
+    return 0; // אם לא נמצא טווח מתאים
+  }
+  
+  let price = range.price;
+  
+  // הוספת תוספת מאוורר
+  if (orderForm.skinType === 'מאוורר') {
+    price += fanSupplement;
+  }
+  
+  return Math.max(0, price - discount);
+};
 
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4493,15 +4509,15 @@ export default function FaniyaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="skinType">סוג סקין *</Label>
-                      <Select value={orderForm.skinType} onValueChange={(value) => handleInputChange('skinType', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="רגיל">רגיל (₪{skinTypePrices['רגיל']} לס"מ)</SelectItem>
-                          <SelectItem value="מאוורר">מאוורר (₪{skinTypePrices['מאוורר']} לס"מ)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                     <Select value={orderForm.skinType} onValueChange={(value) => handleInputChange('skinType', value)}>
+  <SelectTrigger>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="רגיל">רגיל</SelectItem>
+    <SelectItem value="מאוורר">מאוורר (+₪{fanSupplement} תוספת)</SelectItem>
+  </SelectContent>
+</Select>
                     </div>
 
                     <div>

@@ -3,17 +3,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" 
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// טבלת משתמשים
 model User {
   id       String @id @default(cuid())
   username String @unique
   password String
   name     String
-  role     String @default("user") // "admin" או "user"
+  role     String @default("user")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -21,19 +20,16 @@ model User {
   @@map("users")
 }
 
-// טבלת פאניות
 model Faniya {
   id   String @id @default(cuid())
   name String @unique
   
-  // קשרים
   orders         Order[]
   payments       Payment[]
-  monthlyReports MonthlyReport[] // הוספתי את הקשר הזה שהיה חסר!
+  monthlyReports MonthlyReport[]
   
-  // חישובים
-  totalDebt    Float @default(0)
-  totalPayments Float @default(0)
+  totalDebt      Float @default(0)
+  totalPayments  Float @default(0)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -41,37 +37,31 @@ model Faniya {
   @@map("faniyas")
 }
 
-// טבלת הזמנות
 model Order {
   id String @id @default(cuid())
   
-  // פרטי הזמנה בסיסיים
   faniyaId     String
   faniya       Faniya @relation(fields: [faniyaId], references: [id], onDelete: Cascade)
   
   orderDate    DateTime @default(now())
   customerName String
   
-  // מפרטי הפאה
-  length       Int // אורך בס"מ
-  skinType     String // "רגיל" או "מאוורר"  
+  length       Int
+  skinType     String
   color        String
-  highlights   String // "עדינים" / "ללא גוונים" / "בולטים" / "אחר"
+  highlights   String
   babyHairType String?
   openingTone  String?
-  pattern      String // "ייבוש טבעי תנועה גדולה" / "תלתלים" / "חלק גמיש" / "אחר"
+  pattern      String
   notes        String?
   
-  // מחיר והנחות
   discount     Float @default(0)
-  totalPrice   Float // מחושב: length * skinTypeMultiplier - discount
+  totalPrice   Float
   
-  // טרסים
   sentToTrass      Boolean @default(false)
-  trassOperator    String? // "לאופר" או "שורי"
+  trassOperator    String?
   trassSentDate    DateTime?
   
-  // סטטוס ומסירה
   isCompleted      Boolean @default(false)
   deliveryDate     DateTime?
   
@@ -81,18 +71,16 @@ model Order {
   @@map("orders")
 }
 
-// טבלת תשלומים - עודכן לתמיכה בתשלומים מורכבים
 model Payment {
   id String @id @default(cuid())
   
   faniyaId    String
   faniya      Faniya @relation(fields: [faniyaId], references: [id], onDelete: Cascade)
   
-  totalAmount Float // סכום כולל של התשלום
+  totalAmount Float
   paymentDate DateTime @default(now())
   notes       String?
   
-  // חלקי התשלום
   paymentParts PaymentPart[]
   
   createdAt DateTime @default(now())
@@ -101,7 +89,6 @@ model Payment {
   @@map("payments")
 }
 
-// טבלת חלקי תשלום - כל חלק הוא סוג תשלום אחד
 model PaymentPart {
   id String @id @default(cuid())
   
@@ -109,13 +96,12 @@ model PaymentPart {
   payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   
   amount      Float
-  paymentType String // "מזומן" / "צ'ק" / "העברה בנקאית"
+  paymentType String
   
-  // פרטים נוספים לפי סוג התשלום
-  checkNumber   String?   // מספר צ'ק
-  checkDueDate  DateTime? // תאריך פרעון צ'ק
-  bankReference String?   // מספר העברה/אסמכתא
-  notes         String?   // הערות לחלק הזה
+  checkNumber   String?
+  checkDueDate  DateTime?
+  bankReference String?
+  notes         String?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,20 +109,18 @@ model PaymentPart {
   @@map("payment_parts")
 }
 
-// טבלת הגדרות מחירים
 model PricingSettings {
-  id String @id @default(cuid())
-  
-  skinType   String @unique // "רגיל" או "מאוורר"
-  pricePerCm Float // מחיר לס"מ
-  
+  id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  skinType  String
+  minLength Int?
+  maxLength Int?
+  price     Float
   
-  @@map("pricing_settings")
+  @@index([skinType])
 }
 
-// טבלת דוחות חודשיים (אופציונלי - לאופטימיזציה)
 model MonthlyReport {
   id String @id @default(cuid())
   
@@ -144,7 +128,7 @@ model MonthlyReport {
   faniya   Faniya @relation(fields: [faniyaId], references: [id], onDelete: Cascade)
   
   year  Int
-  month Int // 1-12
+  month Int
   
   totalOrders    Int
   totalRevenue   Float

@@ -63,7 +63,7 @@ export default function PendingOrdersPage() {
             onClick={() => window.location.href = '/'}
             className="text-blue-600 hover:text-blue-800"
           >
-            ← חזור לדף הבית
+            חזור לדף הבית →
           </button>
         </div>
 

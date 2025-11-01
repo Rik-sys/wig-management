@@ -1228,7 +1228,7 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
         </div>
         
         <div class="section">
-          <div class="section-title">סה"כ הזמנות לחודש ${monthlyData.month}.${monthlyData.year}</div>
+          <div class="section-title">סה"כ הזמנות</div>
           ${monthlyData.orders.map(order => `
             <div class="order-item">
               <span>${order.customerName}</span>
@@ -1237,13 +1237,13 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
           `).join('')}
           ${monthlyData.orders.length === 0 ? '<div style="text-align: center; color: #666;">אין הזמנות בחודש זה</div>' : ''}
           <div class="total">
-            סה"כ הזמנות לחודש ${monthlyData.month}.${monthlyData.year}: 
+            סה"כ הזמנות : 
             <span class="amount">₪${monthlyData.totalRevenue.toFixed(2)}</span>
           </div>
         </div>
 
         <div class="section">
-          <div class="section-title">סה"כ תשלומים שהתקבלו לחודש ${monthlyData.month}.${monthlyData.year}</div>
+          <div class="section-title">סה"כ תשלומים שהתקבלו </div>
           ${monthlyData.payments.map(payment => `
             <div class="payment-item">
               <span>${new Date(payment.paymentDate).toLocaleDateString('he-IL')}</span>

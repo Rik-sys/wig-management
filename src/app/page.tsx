@@ -495,13 +495,230 @@
 //     </Layout>
 //   );
 // }
+// 'use client';
+
+// import { useEffect, useState } from 'react';
+// import { Layout } from '@/components/layout/Layout';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Button } from '@/components/ui/button';
+// import { PlusCircle, Users, Package, CreditCard } from 'lucide-react';
+
+// export default function HomePage() {
+//   const [stats, setStats] = useState({
+//     totalFaniyas: 0,
+//     pendingOrders: 0,
+//     completedOrders: 0,
+//     totalDebt: 0
+//   });
+
+//   const [faniyas, setFaniyas] = useState<any[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     fetchData();
+//   }, []);
+
+//   const fetchData = async () => {
+//     try {
+//       // טעינת פאניות
+//       const faniyasRes = await fetch('/api/faniyas');
+//       const faniyasData = await faniyasRes.json();
+      
+//       // טעינת כל ההזמנות
+//       const ordersRes = await fetch('/api/orders');
+//       const ordersData = await ordersRes.json();
+      
+//       if (Array.isArray(faniyasData)) {
+//         setFaniyas(faniyasData);
+        
+//         // חישוב סטטיסטיקות
+//         const totalDebt = faniyasData.reduce((sum: number, faniya: any) => 
+//           sum + (faniya.totalDebt || 0), 0);
+        
+//         // חישוב הזמנות ממתינות ומוכנות
+//         const pendingOrders = Array.isArray(ordersData) ? 
+//           ordersData.filter((order: any) => !order.isCompleted).length : 0;
+//         const completedOrders = Array.isArray(ordersData) ? 
+//           ordersData.filter((order: any) => order.isCompleted).length : 0;
+        
+//         setStats({
+//           totalFaniyas: faniyasData.length,
+//           pendingOrders,
+//           completedOrders,
+//           totalDebt
+//         });
+//       }
+//     } catch (error) {
+//       console.error('שגיאה בטעינת נתונים:', error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const addNewFaniya = async () => {
+//     const name = prompt('הכנס שם הפאנית החדשה:');
+//     if (!name) return;
+
+//     try {
+//       const response = await fetch('/api/faniyas', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({ name })
+//       });
+
+//       if (response.ok) {
+//         alert('פאנית נוספה בהצלחה!');
+//         fetchData(); // רענון הנתונים
+//       } else {
+//         const error = await response.json();
+//         alert(`שגיאה: ${error.error}`);
+//       }
+//     } catch (error) {
+//       alert('שגיאה בהוספת פאנית');
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <Layout>
+//         <div className="flex justify-center items-center h-64">
+//           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+//         </div>
+//       </Layout>
+//     );
+//   }
+
+//   return (
+//     <Layout>
+//       <div className="space-y-6">
+//         <div className="flex justify-between items-center">
+//           <h1 className="text-3xl font-bold text-gray-900">מערכת ניהול פאות</h1>
+//           <Button onClick={addNewFaniya} className="flex items-center gap-2">
+//             <PlusCircle className="w-4 h-4" />
+//             פאנית חדשה
+//           </Button>
+//         </div>
+
+//         {/* כרטיסי סטטיסטיקות */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//           <Card>
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//               <CardTitle className="text-sm font-medium">סה״כ פאניות</CardTitle>
+//               <Users className="h-4 w-4 text-muted-foreground" />
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold">{stats.totalFaniyas}</div>
+//             </CardContent>
+//           </Card>
+
+//           <Card>
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//               <CardTitle className="text-sm font-medium">הזמנות ממתינות</CardTitle>
+//               <Package className="h-4 w-4 text-muted-foreground" />
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-orange-600">{stats.pendingOrders}</div>
+//             </CardContent>
+//           </Card>
+
+//           <Card>
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//               <CardTitle className="text-sm font-medium">הזמנות מוכנות</CardTitle>
+//               <Package className="h-4 w-4 text-muted-foreground" />
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-green-600">{stats.completedOrders}</div>
+//             </CardContent>
+//           </Card>
+
+//           <Card>
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//               <CardTitle className="text-sm font-medium">סה״כ חובות</CardTitle>
+//               <CreditCard className="h-4 w-4 text-muted-foreground" />
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-red-600">₪{stats.totalDebt.toFixed(2)}</div>
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* רשימת פאניות */}
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>פאניות</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             {faniyas.length === 0 ? (
+//               <p className="text-gray-500 text-center py-8">
+//                 אין פאניות במערכת. הוסף פאנית חדשה כדי להתחיל.
+//               </p>
+//             ) : (
+//               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+//                 {faniyas.map((faniya) => (
+//                   <Card 
+//                     key={faniya.id} 
+//                     className="cursor-pointer hover:bg-gray-50 transition-colors"
+//                     onClick={() => window.location.href = `/faniya/${faniya.id}`}
+//                   >
+//                     <CardContent className="p-4">
+//                       <h3 className="font-semibold text-lg mb-2">{faniya.name}</h3>
+//                       <div className="space-y-1 text-sm text-gray-600">
+//                         <p>הזמנות: {faniya._count?.orders || 0}</p>
+//                         <p>תשלומים: {faniya._count?.payments || 0}</p>
+//                         {faniya.totalDebt > 0 && (
+//                           <p className="text-red-600 font-semibold">
+//                             חוב: ₪{faniya.totalDebt.toFixed(2)}
+//                           </p>
+//                         )}
+//                       </div>
+//                       <Button 
+//                         className="mt-3 w-full" 
+//                         size="sm"
+//                         onClick={(e) => {
+//                           e.stopPropagation();
+//                           window.location.href = `/faniya/${faniya.id}`;
+//                         }}
+//                       >
+//                         פתח דף פאנית
+//                       </Button>
+//                     </CardContent>
+//                   </Card>
+//                 ))}
+//               </div>
+//             )}
+//           </CardContent>
+//         </Card>
+
+//         {/* הודעות מערכת */}
+//         {/* <Card>
+//           <CardContent className="p-6">
+//             <h3 className="font-semibold mb-2">💡 המערכת מוכנה לפעולה!</h3>
+//             <ul className="text-sm text-gray-600 space-y-1">
+//               <li>✅ בסיס הנתונים הותקן בהצלחה</li>
+//               <li>✅ משתמשים ראשוניים נוצרו (admin/admin123)</li>
+//               <li>✅ ניתן להוסיף פאניות חדשות</li>
+//               <li>🔄 בשלבים הבאים: הזמנות, תשלומים ודוחות</li>
+//             </ul>
+//           </CardContent>
+//         </Card> */}
+//       </div>
+//     </Layout>
+//   );
+// }
+
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Users, Package, CreditCard } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PlusCircle, Users, Package, CreditCard, Search, DollarSign } from 'lucide-react';
 
 export default function HomePage() {
   const [stats, setStats] = useState({
@@ -512,11 +729,31 @@ export default function HomePage() {
   });
 
   const [faniyas, setFaniyas] = useState<any[]>([]);
+  const [filteredFaniyas, setFilteredFaniyas] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showPricingDialog, setShowPricingDialog] = useState(false);
+  const [pricing, setPricing] = useState({
+    regular: '15',
+    fan: '18'
+  });
 
   useEffect(() => {
     fetchData();
+    fetchPricing();
   }, []);
+
+  useEffect(() => {
+    // סינון פאניות לפי חיפוש
+    if (searchTerm.trim() === '') {
+      setFilteredFaniyas(faniyas);
+    } else {
+      const filtered = faniyas.filter((faniya: any) =>
+        faniya.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredFaniyas(filtered);
+    }
+  }, [searchTerm, faniyas]);
 
   const fetchData = async () => {
     try {
@@ -530,6 +767,7 @@ export default function HomePage() {
       
       if (Array.isArray(faniyasData)) {
         setFaniyas(faniyasData);
+        setFilteredFaniyas(faniyasData);
         
         // חישוב סטטיסטיקות
         const totalDebt = faniyasData.reduce((sum: number, faniya: any) => 
@@ -555,6 +793,45 @@ export default function HomePage() {
     }
   };
 
+  const fetchPricing = async () => {
+    try {
+      const response = await fetch('/api/pricing');
+      if (response.ok) {
+        const data = await response.json();
+        setPricing({
+          regular: data.regular?.toString() || '15',
+          fan: data.fan?.toString() || '18'
+        });
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת מחירים:', error);
+    }
+  };
+
+  const updatePricing = async () => {
+    try {
+      const response = await fetch('/api/pricing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          regular: parseFloat(pricing.regular),
+          fan: parseFloat(pricing.fan)
+        })
+      });
+
+      if (response.ok) {
+        alert('מחירים עודכנו בהצלחה!');
+        setShowPricingDialog(false);
+      } else {
+        alert('שגיאה בעדכון מחירים');
+      }
+    } catch (error) {
+      alert('שגיאה בעדכון מחירים');
+    }
+  };
+
   const addNewFaniya = async () => {
     const name = prompt('הכנס שם הפאנית החדשה:');
     if (!name) return;
@@ -570,7 +847,7 @@ export default function HomePage() {
 
       if (response.ok) {
         alert('פאנית נוספה בהצלחה!');
-        fetchData(); // רענון הנתונים
+        fetchData();
       } else {
         const error = await response.json();
         alert(`שגיאה: ${error.error}`);
@@ -595,10 +872,51 @@ export default function HomePage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">מערכת ניהול פאות</h1>
-          <Button onClick={addNewFaniya} className="flex items-center gap-2">
-            <PlusCircle className="w-4 h-4" />
-            פאנית חדשה
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={showPricingDialog} onOpenChange={setShowPricingDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  עדכון מחירים
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>עדכון מחירי סקין</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="regular">מחיר סקין רגיל (לס"מ)</Label>
+                    <Input
+                      id="regular"
+                      type="number"
+                      step="0.01"
+                      value={pricing.regular}
+                      onChange={(e) => setPricing(prev => ({ ...prev, regular: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fan">מחיר סקין מאוורר (לס"מ)</Label>
+                    <Input
+                      id="fan"
+                      type="number"
+                      step="0.01"
+                      value={pricing.fan}
+                      onChange={(e) => setPricing(prev => ({ ...prev, fan: e.target.value }))}
+                    />
+                  </div>
+                  <Button onClick={updatePricing} className="w-full">
+                    שמור מחירים
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Button onClick={addNewFaniya} className="flex items-center gap-2">
+              <PlusCircle className="w-4 h-4" />
+              פאנית חדשה
+            </Button>
+          </div>
         </div>
 
         {/* כרטיסי סטטיסטיקות */}
@@ -613,13 +931,17 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => window.location.href = '/orders/pending'}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">הזמנות ממתינות</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">{stats.pendingOrders}</div>
+              <p className="text-xs text-muted-foreground mt-1">לחץ לצפייה</p>
             </CardContent>
           </Card>
 
@@ -644,19 +966,37 @@ export default function HomePage() {
           </Card>
         </div>
 
+        {/* חיפוש פאניות */}
+        <Card>
+          <CardHeader>
+            <CardTitle>חיפוש פאנית</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="חפש לפי שם פאנית..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* רשימת פאניות */}
         <Card>
           <CardHeader>
-            <CardTitle>פאניות</CardTitle>
+            <CardTitle>פאניות ({filteredFaniyas.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {faniyas.length === 0 ? (
+            {filteredFaniyas.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                אין פאניות במערכת. הוסף פאנית חדשה כדי להתחיל.
+                {searchTerm ? 'לא נמצאו פאניות התואמות לחיפוש' : 'אין פאניות במערכת. הוסף פאנית חדשה כדי להתחיל.'}
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {faniyas.map((faniya) => (
+                {filteredFaniyas.map((faniya) => (
                   <Card 
                     key={faniya.id} 
                     className="cursor-pointer hover:bg-gray-50 transition-colors"
@@ -690,19 +1030,6 @@ export default function HomePage() {
             )}
           </CardContent>
         </Card>
-
-        {/* הודעות מערכת */}
-        {/* <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">💡 המערכת מוכנה לפעולה!</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>✅ בסיס הנתונים הותקן בהצלחה</li>
-              <li>✅ משתמשים ראשוניים נוצרו (admin/admin123)</li>
-              <li>✅ ניתן להוסיף פאניות חדשות</li>
-              <li>🔄 בשלבים הבאים: הזמנות, תשלומים ודוחות</li>
-            </ul>
-          </CardContent>
-        </Card> */}
       </div>
     </Layout>
   );

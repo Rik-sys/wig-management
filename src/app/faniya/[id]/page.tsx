@@ -3308,6 +3308,803 @@
 //     </Layout>
 //   );
 // }
+// 'use client';
+
+// import { useEffect, useState } from 'react';
+// import { useParams, useRouter } from 'next/navigation';
+// import { Layout } from '@/components/layout/Layout';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Button } from '@/components/ui/button';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { Textarea } from '@/components/ui/textarea';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Checkbox } from '@/components/ui/checkbox';
+// import { Badge } from '@/components/ui/badge';
+// import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+// import { CompoundPaymentForm } from '@/components/forms/CompoundPaymentForm';
+// import { MonthlyReports } from '@/components/reports/MonthlyReports';
+// import { PlusCircle, Package, CreditCard, FileText, ArrowRight, Calendar, Edit, Trash2 } from 'lucide-react';
+
+// interface Faniya {
+//   id: string;
+//   name: string;
+//   totalDebt: number;
+//   totalPayments: number;
+// }
+
+// interface Order {
+//   id: string;
+//   orderDate: string;
+//   customerName: string;
+//   length: number;
+//   skinType: string;
+//   color: string;
+//   highlights: string;
+//   babyHairType?: string;
+//   openingTone?: string;
+//   pattern: string;
+//   notes?: string;
+//   discount: number;
+//   totalPrice: number;
+//   sentToTrass: boolean;
+//   trassOperator?: string;
+//   trassSentDate?: string;
+//   isCompleted: boolean;
+//   deliveryDate?: string;
+// }
+
+// interface Payment {
+//   id: string;
+//   amount: number;
+//   paymentDate: string;
+//   paymentType: string;
+//   checkDueDate?: string;
+//   notes?: string;
+// }
+
+// export default function FaniyaPage() {
+//   const params = useParams();
+//   const router = useRouter();
+//   const faniyaId = params.id as string;
+  
+//   const [faniya, setFaniya] = useState<Faniya | null>(null);
+//   const [orders, setOrders] = useState<Order[]>([]);
+//   const [payments, setPayments] = useState<Payment[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [activeTab, setActiveTab] = useState('new-order');
+
+//   // States לטופס הזמנה חדשה
+//   const [orderForm, setOrderForm] = useState({
+//     customerName: '',
+//     length: '',
+//     skinType: 'רגיל',
+//     color: '',
+//     highlights: 'ללא גוונים',
+//     babyHairType: '',
+//     openingTone: '',
+//     pattern: 'ייבוש טבעי תנועה גדולה',
+//     notes: '',
+//     discount: '0',
+//     sentToTrass: false,
+//     trassOperator: '',
+//     trassSentDate: ''
+//   });
+
+//   // State לטופס תשלום מורכב
+//   const [showPaymentForm, setShowPaymentForm] = useState(false);
+
+//   useEffect(() => {
+//     if (faniyaId) {
+//       fetchFaniyaData();
+//     }
+//   }, [faniyaId]);
+
+//   const fetchFaniyaData = async () => {
+//     try {
+//       // טעינת פרטי פאנית
+//       const faniyaRes = await fetch(`/api/faniyas/${faniyaId}`);
+//       if (faniyaRes.ok) {
+//         const faniyaData = await faniyaRes.json();
+//         setFaniya(faniyaData);
+//       }
+
+//       // טעינת הזמנות
+//       const ordersRes = await fetch(`/api/orders?faniyaId=${faniyaId}`);
+//       if (ordersRes.ok) {
+//         const ordersData = await ordersRes.json();
+//         setOrders(ordersData);
+//       }
+
+//       // טעינת תשלומים
+//       const paymentsRes = await fetch(`/api/payments?faniyaId=${faniyaId}`);
+//       if (paymentsRes.ok) {
+//         const paymentsData = await paymentsRes.json();
+//         setPayments(paymentsData);
+//       }
+
+//     } catch (error) {
+//       console.error('שגיאה בטעינת נתונים:', error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const calculatePrice = () => {
+//     const length = parseInt(orderForm.length) || 0;
+//     const pricePerCm = orderForm.skinType === 'רגיל' ? 15 : 18;
+//     const discount = parseFloat(orderForm.discount) || 0;
+//     return Math.max(0, (length * pricePerCm) - discount);
+//   };
+
+//   const handleOrderSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+    
+//     if (!orderForm.customerName || !orderForm.length || !orderForm.color) {
+//       alert('אנא מלא את כל השדות החובה');
+//       return;
+//     }
+
+//     try {
+//       const response = await fetch('/api/orders', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//           faniyaId,
+//           ...orderForm,
+//           length: parseInt(orderForm.length),
+//           discount: parseFloat(orderForm.discount) || 0,
+//           totalPrice: calculatePrice(),
+//           trassSentDate: orderForm.trassSentDate || null
+//         })
+//       });
+
+//       if (response.ok) {
+//         alert('הזמנה נוספה בהצלחה!');
+//         setOrderForm({
+//           customerName: '',
+//           length: '',
+//           skinType: 'רגיל',
+//           color: '',
+//           highlights: 'ללא גוונים',
+//           babyHairType: '',
+//           openingTone: '',
+//           pattern: 'ייבוש טבעי תנועה גדולה',
+//           notes: '',
+//           discount: '0',
+//           sentToTrass: false,
+//           trassOperator: '',
+//           trassSentDate: ''
+//         });
+//         fetchFaniyaData();
+//         setActiveTab('pending');
+//       } else {
+//         const error = await response.json();
+//         alert(`שגיאה: ${error.error}`);
+//       }
+//     } catch (error) {
+//       alert('שגיאה בהוספת הזמנה');
+//     }
+//   };
+
+//   const handlePaymentSubmit = async (paymentData: any) => {
+//     try {
+//       const response = await fetch('/api/payments', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify(paymentData)
+//       });
+
+//       if (response.ok) {
+//         alert('תשלום נוסף בהצלחה!');
+//         setShowPaymentForm(false);
+//         fetchFaniyaData();
+//       } else {
+//         const error = await response.json();
+//         alert(`שגיאה: ${error.error}`);
+//       }
+//     } catch (error) {
+//       alert('שגיאה בהוספת תשלום');
+//     }
+//   };
+
+//   const markAsDelivered = async (orderId: string) => {
+//     try {
+//       const response = await fetch(`/api/orders/${orderId}`, {
+//         method: 'PUT',
+//         headers: {
+//           'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//           deliveryDate: new Date().toISOString(),
+//           isCompleted: true
+//         })
+//       });
+
+//       if (response.ok) {
+//         alert('הזמנה סומנה כנמסרה!');
+//         fetchFaniyaData();
+//       }
+//     } catch (error) {
+//       alert('שגיאה בעדכון הזמנה');
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <Layout>
+//         <div className="flex justify-center items-center h-64">
+//           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+//         </div>
+//       </Layout>
+//     );
+//   }
+
+//   if (!faniya) {
+//     return (
+//       <Layout>
+//         <div className="text-center py-12">
+//           <h2 className="text-2xl font-bold text-gray-900 mb-4">פאנית לא נמצאה</h2>
+//           <Button onClick={() => router.push('/')}>חזור לדף הבית</Button>
+//         </div>
+//       </Layout>
+//     );
+//   }
+
+//   const pendingOrders = orders.filter(order => !order.isCompleted);
+//   const completedOrders = orders.filter(order => order.isCompleted);
+
+//   return (
+//     <Layout>
+//       <div className="space-y-6" dir="rtl">
+//         {/* כותרת וסטטיסטיקות */}
+//         <div>
+//           <div className="flex justify-between items-center mb-6">
+//             <div>
+//               <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
+// → חזור לדף הבית 
+//                </Button>
+//               <h1 className="text-3xl font-bold text-gray-900">{faniya.name}</h1>
+//             </div>
+//           </div>
+
+//           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+//             <Card>
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium">הזמנות ממתינות</CardTitle>
+//                 <Package className="h-4 w-4 text-orange-500" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
+//               </CardContent>
+//             </Card>
+
+//             <Card>
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium">הזמנות מוכנות</CardTitle>
+//                 <Package className="h-4 w-4 text-green-500" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-green-600">{completedOrders.length}</div>
+//               </CardContent>
+//             </Card>
+
+//             <Card>
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium">סה״כ תשלומים</CardTitle>
+//                 <CreditCard className="h-4 w-4 text-blue-500" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="text-2xl font-bold text-blue-600">₪{faniya.totalPayments.toFixed(2)}</div>
+//               </CardContent>
+//             </Card>
+
+//             <Card>
+//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//                 <CardTitle className="text-sm font-medium">יתרת חוב</CardTitle>
+//                 <CreditCard className="h-4 w-4 text-red-500" />
+//               </CardHeader>
+//               <CardContent>
+//                 <div className={`text-2xl font-bold ${faniya.totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+//                   ₪{faniya.totalDebt.toFixed(2)}
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           </div>
+//         </div>
+
+//         {/* תפריט טאבים */}
+//         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
+//           <TabsList className="grid w-full grid-cols-5">
+//             <TabsTrigger value="new-order">הזמנה חדשה</TabsTrigger>
+//             <TabsTrigger value="pending">לא מוכנות ({pendingOrders.length})</TabsTrigger>
+//             <TabsTrigger value="completed">מוכנות ({completedOrders.length})</TabsTrigger>
+//             <TabsTrigger value="payments">תשלומים ({payments.length})</TabsTrigger>
+//             <TabsTrigger value="reports">דוחות</TabsTrigger>
+//           </TabsList>
+
+//           {/* טאב הזמנה חדשה */}
+//           <TabsContent value="new-order" className="space-y-4">
+//             <Card>
+//               <CardHeader>
+//                 <CardTitle>הזמנה חדשה</CardTitle>
+//               </CardHeader>
+//               <CardContent>
+//                 <form onSubmit={handleOrderSubmit} className="space-y-6" dir="rtl">
+//                   {/* פרטים בסיסיים */}
+//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                     <div>
+//                       <Label htmlFor="customerName">שם הלקוחה *</Label>
+//                       <Input
+//                         id="customerName"
+//                         value={orderForm.customerName}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, customerName: e.target.value }))}
+//                         required
+//                       />
+//                     </div>
+                    
+//                     <div>
+//                       <Label htmlFor="length">אורך הפאה (ס"מ) *</Label>
+//                       <Input
+//                         id="length"
+//                         type="number"
+//                         min="1"
+//                         value={orderForm.length}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, length: e.target.value }))}
+//                         required
+//                       />
+//                     </div>
+//                   </div>
+
+//                   {/* מפרטי הפאה */}
+//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                     <div>
+//                       <Label htmlFor="skinType">סוג סקין *</Label>
+//                       <Select value={orderForm.skinType} onValueChange={(value) => setOrderForm(prev => ({ ...prev, skinType: value }))}>
+//                         <SelectTrigger>
+//                           <SelectValue />
+//                         </SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="רגיל">רגיל (₪15 לס"מ)</SelectItem>
+//                           <SelectItem value="מאוורר">מאוורר (₪18 לס"מ)</SelectItem>
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+
+//                     <div>
+//                       <Label htmlFor="color">צבע *</Label>
+//                       <Input
+//                         id="color"
+//                         value={orderForm.color}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, color: e.target.value }))}
+//                         required
+//                       />
+//                     </div>
+
+//                     <div>
+//                       <Label htmlFor="highlights">גוונים בפאה</Label>
+//                       <Select value={orderForm.highlights} onValueChange={(value) => setOrderForm(prev => ({ ...prev, highlights: value }))}>
+//                         <SelectTrigger>
+//                           <SelectValue />
+//                         </SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="עדינים">עדינים</SelectItem>
+//                           <SelectItem value="ללא גוונים">ללא גוונים</SelectItem>
+//                           <SelectItem value="בולטים">בולטים</SelectItem>
+//                           <SelectItem value="אחר">אחר</SelectItem>
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+
+//                     <div>
+//                       <Label htmlFor="pattern">דוגמת פאה</Label>
+//                       <Select value={orderForm.pattern} onValueChange={(value) => setOrderForm(prev => ({ ...prev, pattern: value }))}>
+//                         <SelectTrigger>
+//                           <SelectValue />
+//                         </SelectTrigger>
+//                         <SelectContent>
+//                           <SelectItem value="ייבוש טבעי תנועה גדולה">ייבוש טבעי תנועה גדולה</SelectItem>
+//                           <SelectItem value="תלתלים">תלתלים</SelectItem>
+//                           <SelectItem value="חלק גמיש">חלק גמיש</SelectItem>
+//                           <SelectItem value="אחר">אחר</SelectItem>
+//                         </SelectContent>
+//                       </Select>
+//                     </div>
+
+//                     <div>
+//                       <Label htmlFor="babyHairType">סוג בייביהר</Label>
+//                       <Input
+//                         id="babyHairType"
+//                         value={orderForm.babyHairType}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, babyHairType: e.target.value }))}
+//                       />
+//                     </div>
+
+//                     <div>
+//                       <Label htmlFor="openingTone">גוון פתיחה</Label>
+//                       <Input
+//                         id="openingTone"
+//                         value={orderForm.openingTone}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, openingTone: e.target.value }))}
+//                       />
+//                     </div>
+//                   </div>
+
+//                   {/* מחיר והנחה */}
+//                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+//                     <div>
+//                       <Label htmlFor="discount">הנחה (₪)</Label>
+//                       <Input
+//                         id="discount"
+//                         type="number"
+//                         min="0"
+//                         step="0.01"
+//                         value={orderForm.discount}
+//                         onChange={(e) => setOrderForm(prev => ({ ...prev, discount: e.target.value }))}
+//                       />
+//                     </div>
+//                     <div className="flex items-end">
+//                       <div className="text-lg font-semibold">
+//                         מחיר סופי: ₪{calculatePrice().toFixed(2)}
+//                       </div>
+//                     </div>
+//                   </div>
+
+//                   {/* טרסים */}
+//                   <div className="border-t pt-4">
+//                     <div className="flex items-center space-x-2 mb-4">
+//                       <Checkbox
+//                         id="sentToTrass"
+//                         checked={orderForm.sentToTrass}
+//                         onCheckedChange={(checked) => setOrderForm(prev => ({ ...prev, sentToTrass: !!checked }))}
+//                       />
+//                       <Label htmlFor="sentToTrass">נשלח לטרסים</Label>
+//                     </div>
+
+//                     {orderForm.sentToTrass && (
+//                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+//                         <div>
+//                           <Label htmlFor="trassOperator"> טרסים</Label>
+//                           <Select value={orderForm.trassOperator} onValueChange={(value) => setOrderForm(prev => ({ ...prev, trassOperator: value }))}>
+//                             <SelectTrigger>
+//                               <SelectValue placeholder="בחר אופן" />
+//                             </SelectTrigger>
+//                             <SelectContent>
+//                               <SelectItem value="לאופר">לאופר</SelectItem>
+//                               <SelectItem value="שורי">שורי</SelectItem>
+//                             </SelectContent>
+//                           </Select>
+//                         </div>
+
+//                         <div>
+//                           <Label htmlFor="trassSentDate">תאריך שליחה לטרסים</Label>
+//                           <Input
+//                             id="trassSentDate"
+//                             type="date"
+//                             value={orderForm.trassSentDate}
+//                             onChange={(e) => setOrderForm(prev => ({ ...prev, trassSentDate: e.target.value }))}
+//                           />
+//                         </div>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* הערות */}
+//                   <div>
+//                     <Label htmlFor="notes">הערות</Label>
+//                     <Textarea
+//                       id="notes"
+//                       value={orderForm.notes}
+//                       onChange={(e) => setOrderForm(prev => ({ ...prev, notes: e.target.value }))}
+//                       rows={3}
+//                     />
+//                   </div>
+
+//                   {/* כפתורים */}
+//                   <div className="flex justify-end space-x-4">
+//                     <Button type="submit" className="flex items-center gap-2">
+//                       <PlusCircle className="w-4 h-4" />
+//                       שמור הזמנה
+//                     </Button>
+//                   </div>
+//                 </form>
+//               </CardContent>
+//             </Card>
+//           </TabsContent>
+
+//           {/* טאב הזמנות ממתינות */}
+//           <TabsContent value="pending" className="space-y-4">
+//             <div className="flex justify-between items-center">
+//               <h3 className="text-lg font-semibold">הזמנות ממתינות ({pendingOrders.length})</h3>
+//             </div>
+            
+//             <div className="grid gap-4">
+//               {pendingOrders.length === 0 ? (
+//                 <Card>
+//                   <CardContent className="p-6 text-center text-gray-500">
+//                     אין הזמנות ממתינות
+//                   </CardContent>
+//                 </Card>
+//               ) : (
+//                 pendingOrders.map((order) => (
+//                   <Card key={order.id}>
+//                     <CardContent className="p-6">
+//                       <div className="flex justify-between items-start mb-4">
+//                         <div>
+//                           <h4 className="text-lg font-semibold">{order.customerName}</h4>
+//                           <p className="text-sm text-gray-600">הוזמן ב: {new Date(order.orderDate).toLocaleDateString('he-IL')}</p>
+//                         </div>
+//                         <div className="text-left">
+//                           <div className="text-lg font-bold text-green-600">₪{order.totalPrice.toFixed(2)}</div>
+//                           <Badge variant="outline" className="mt-1">ממתינה</Badge>
+//                         </div>
+//                       </div>
+                      
+//                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+//                         <div>
+//                           <span className="font-medium">אורך:</span> {order.length} ס"מ
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">סקין:</span> {order.skinType}
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">צבע:</span> {order.color}
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">גוונים:</span> {order.highlights}
+//                         </div>
+//                       </div>
+
+//                       {order.sentToTrass && (
+//                         <div className="mt-3 p-2 bg-blue-50 rounded text-sm">
+//                           <span className="font-medium">נשלח לטרסים:</span> {order.trassOperator} 
+//                           {order.trassSentDate && ` בתאריך ${new Date(order.trassSentDate).toLocaleDateString('he-IL')}`}
+//                         </div>
+//                       )}
+
+//                       {order.notes && (
+//                         <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+//                           <span className="font-medium">הערות:</span> {order.notes}
+//                         </div>
+//                       )}
+
+//                       <div className="flex justify-end mt-4 space-x-2">
+//                         <AlertDialog>
+//                           <AlertDialogTrigger asChild>
+//                             <Button size="sm" className="flex items-center gap-2">
+//                               <ArrowRight className="w-4 h-4" />
+//                               סמן כנמסר
+//                             </Button>
+//                           </AlertDialogTrigger>
+//                           <AlertDialogContent>
+//                             <AlertDialogHeader>
+//                               <AlertDialogTitle>סמן הזמנה כנמסרה</AlertDialogTitle>
+//                               <AlertDialogDescription>
+//                                 האם אתה בטוח שברצונך לסמן את ההזמנה של {order.customerName} כנמסרה?
+//                                 פעולה זו תעביר את ההזמנה לטאב "מוכנות".
+//                               </AlertDialogDescription>
+//                             </AlertDialogHeader>
+//                             <AlertDialogFooter>
+//                               <AlertDialogCancel>ביטול</AlertDialogCancel>
+//                               <AlertDialogAction onClick={() => markAsDelivered(order.id)}>
+//                                 אישור
+//                               </AlertDialogAction>
+//                             </AlertDialogFooter>
+//                           </AlertDialogContent>
+//                         </AlertDialog>
+//                       </div>
+//                     </CardContent>
+//                   </Card>
+//                 ))
+//               )}
+//             </div>
+//           </TabsContent>
+
+//           {/* טאב הזמנות מוכנות */}
+//           <TabsContent value="completed" className="space-y-4">
+//             <div className="flex justify-between items-center">
+//               <h3 className="text-lg font-semibold">הזמנות מוכנות ({completedOrders.length})</h3>
+//             </div>
+            
+//             <div className="grid gap-4">
+//               {completedOrders.length === 0 ? (
+//                 <Card>
+//                   <CardContent className="p-6 text-center text-gray-500">
+//                     אין הזמנות מוכנות
+//                   </CardContent>
+//                 </Card>
+//               ) : (
+//                 completedOrders.map((order) => (
+//                   <Card key={order.id}>
+//                     <CardContent className="p-6">
+//                       <div className="flex justify-between items-start mb-4">
+//                         <div>
+//                           <h4 className="text-lg font-semibold">{order.customerName}</h4>
+//                           <div className="text-sm text-gray-600">
+//                             <p>הוזמן ב: {new Date(order.orderDate).toLocaleDateString('he-IL')}</p>
+//                             {order.deliveryDate && (
+//                               <p>נמסר ב: {new Date(order.deliveryDate).toLocaleDateString('he-IL')}</p>
+//                             )}
+//                           </div>
+//                         </div>
+//                         <div className="text-left">
+//                           <div className="text-lg font-bold text-green-600">₪{order.totalPrice.toFixed(2)}</div>
+//                           <Badge className="mt-1 bg-green-100 text-green-800">נמסר</Badge>
+//                         </div>
+//                       </div>
+                      
+//                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+//                         <div>
+//                           <span className="font-medium">אורך:</span> {order.length} ס"מ
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">סקין:</span> {order.skinType}
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">צבע:</span> {order.color}
+//                         </div>
+//                         <div>
+//                           <span className="font-medium">גוונים:</span> {order.highlights}
+//                         </div>
+//                       </div>
+
+//                       {order.notes && (
+//                         <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+//                           <span className="font-medium">הערות:</span> {order.notes}
+//                         </div>
+//                       )}
+//                     </CardContent>
+//                   </Card>
+//                 ))
+//               )}
+//             </div>
+//           </TabsContent>
+
+//           {/* טאב תשלומים */}
+//           <TabsContent value="payments" className="space-y-4">
+//             <div className="flex justify-between items-center">
+//               <h3 className="text-lg font-semibold">תשלומים</h3>
+//               <Button 
+//                 onClick={() => setShowPaymentForm(!showPaymentForm)}
+//                 className="flex items-center gap-2"
+//               >
+//                 <PlusCircle className="w-4 h-4" />
+//                 {showPaymentForm ? 'ביטול' : 'תשלום חדש'}
+//               </Button>
+//             </div>
+
+//             {/* טופס תשלום מורכב */}
+//             {showPaymentForm && (
+//               <CompoundPaymentForm
+//                 faniyaId={faniyaId}
+//                 onSubmit={handlePaymentSubmit}
+//                 onCancel={() => setShowPaymentForm(false)}
+//               />
+//             )}
+
+//             {/* רשימת תשלומים */}
+//             <Card>
+//               <CardHeader>
+//                 <CardTitle>היסטוריית תשלומים</CardTitle>
+//               </CardHeader>
+//               <CardContent>
+//                 {payments.length === 0 ? (
+//                   <p className="text-gray-500 text-center py-8">אין תשלומים רשומים</p>
+//                 ) : (
+//                   <div className="space-y-4">
+//                     {payments.map((payment: any) => (
+//                       <div key={payment.id} className="border rounded-lg p-4">
+//                         <div className="flex justify-between items-start mb-3">
+//                           <div>
+//                             <div className="font-semibold text-lg text-green-600">₪{payment.totalAmount?.toFixed(2) || payment.amount?.toFixed(2)}</div>
+//                             <div className="text-sm text-gray-600">
+//                               {new Date(payment.paymentDate).toLocaleDateString('he-IL')}
+//                             </div>
+//                             {payment.notes && (
+//                               <div className="text-sm text-gray-500 mt-1">{payment.notes}</div>
+//                             )}
+//                           </div>
+//                         </div>
+
+//                         {/* הצגת חלקי התשלום */}
+//                         {payment.paymentParts && payment.paymentParts.length > 0 ? (
+//                           <div className="space-y-2">
+//                             <div className="text-sm font-medium text-gray-700">פירוט התשלום:</div>
+//                             {payment.paymentParts.map((part: any, index: number) => (
+//                               <div key={part.id} className="bg-gray-50 p-3 rounded text-sm">
+//                                 <div className="flex justify-between items-start">
+//                                   <div className="flex items-center gap-2">
+//                                     {part.paymentType === 'מזומן'  }
+//                                     {part.paymentType === 'צ\'ק' }
+//                                     {part.paymentType === 'העברה בנקאית' }
+//                                     <span className="font-medium">{part.paymentType}</span>
+//                                   </div>
+//                                   <span className="font-bold text-green-600">₪{part.amount.toFixed(2)}</span>
+//                                 </div>
+                                
+//                                 {part.paymentType === 'צ\'ק' && (
+//                                   <div className="mt-1 text-gray-600">
+//                                     {part.checkNumber && <span>צ'ק מס׳ {part.checkNumber}</span>}
+//                                     {part.checkDueDate && (
+//                                       <span className="mr-2">
+//                                         פרעון: {new Date(part.checkDueDate).toLocaleDateString('he-IL')}
+//                                       </span>
+//                                     )}
+//                                   </div>
+//                                 )}
+                                
+//                                 {part.paymentType === 'העברה בנקאית' && part.bankReference && (
+//                                   <div className="mt-1 text-gray-600">
+//                                     אסמכתא: {part.bankReference}
+//                                   </div>
+//                                 )}
+                                
+//                                 {part.notes && (
+//                                   <div className="mt-1 text-gray-500 text-xs">{part.notes}</div>
+//                                 )}
+//                               </div>
+//                             ))}
+//                           </div>
+//                         ) : (
+//                           // תשלום ישן (לתאימות לאחור)
+//                           <div className="text-sm text-gray-600">
+//                             {payment.paymentType || 'לא צוין'} 
+//                             {payment.checkDueDate && (
+//                               <span className="mr-2">
+//                                 | פרעון: {new Date(payment.checkDueDate).toLocaleDateString('he-IL')}
+//                               </span>
+//                             )}
+//                           </div>
+//                         )}
+//                       </div>
+//                     ))}
+//                   </div>
+//                 )}
+//               </CardContent>
+//             </Card>
+
+//             {/* סיכום תשלומים */}
+//             <Card>
+//               <CardHeader>
+//                 <CardTitle>סיכום</CardTitle>
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//                   <div className="text-center">
+//                     <div className="text-2xl font-bold text-blue-600">₪{faniya.totalPayments.toFixed(2)}</div>
+//                     <div className="text-sm text-gray-600">סה"כ תשלומים</div>
+//                   </div>
+//                   <div className="text-center">
+//                     <div className="text-2xl font-bold text-orange-600">
+//                       ₪{completedOrders.reduce((sum, order) => sum + order.totalPrice, 0).toFixed(2)}
+//                     </div>
+//                     <div className="text-sm text-gray-600">סה"כ הזמנות</div>
+//                   </div>
+//                   <div className="text-center">
+//                     <div className={`text-2xl font-bold ${faniya.totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+//                       ₪{faniya.totalDebt.toFixed(2)}
+//                     </div>
+//                     <div className="text-sm text-gray-600">יתרת חוב</div>
+//                   </div>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           </TabsContent>
+
+//           {/* טאב דוחות */}
+//           <TabsContent value="reports" className="space-y-4">
+//             <MonthlyReports faniyaId={faniyaId} faniyaName={faniya.name} />
+//           </TabsContent>
+//         </Tabs>
+//       </div>
+//     </Layout>
+//   );
+// }
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -3325,6 +4122,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { CompoundPaymentForm } from '@/components/forms/CompoundPaymentForm';
 import { MonthlyReports } from '@/components/reports/MonthlyReports';
+import { PaymentsOnlyReport } from '@/components/reports/PaymentsOnlyReport';
 import { PlusCircle, Package, CreditCard, FileText, ArrowRight, Calendar, Edit, Trash2 } from 'lucide-react';
 
 interface Faniya {
@@ -3332,6 +4130,10 @@ interface Faniya {
   name: string;
   totalDebt: number;
   totalPayments: number;
+  _count: {
+    orders: number;
+    payments: number;
+  };
 }
 
 interface Order {
@@ -3357,11 +4159,13 @@ interface Order {
 
 interface Payment {
   id: string;
-  amount: number;
+  totalAmount?: number;
+  amount?: number;
   paymentDate: string;
-  paymentType: string;
+  paymentType?: string;
   checkDueDate?: string;
   notes?: string;
+  paymentParts?: any[];
 }
 
 export default function FaniyaPage() {
@@ -3375,7 +4179,7 @@ export default function FaniyaPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('new-order');
 
-  // States לטופס הזמנה חדשה
+  // State לטופס הזמנה חדשה
   const [orderForm, setOrderForm] = useState({
     customerName: '',
     length: '',
@@ -3392,32 +4196,36 @@ export default function FaniyaPage() {
     trassSentDate: ''
   });
 
+  // State למחירים
+  const [skinTypePrices, setSkinTypePrices] = useState({
+    'רגיל': 15,
+    'מאוורר': 18
+  });
+
   // State לטופס תשלום מורכב
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   useEffect(() => {
     if (faniyaId) {
       fetchFaniyaData();
+      fetchPricing();
     }
   }, [faniyaId]);
 
   const fetchFaniyaData = async () => {
     try {
-      // טעינת פרטי פאנית
       const faniyaRes = await fetch(`/api/faniyas/${faniyaId}`);
       if (faniyaRes.ok) {
         const faniyaData = await faniyaRes.json();
         setFaniya(faniyaData);
       }
 
-      // טעינת הזמנות
       const ordersRes = await fetch(`/api/orders?faniyaId=${faniyaId}`);
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         setOrders(ordersData);
       }
 
-      // טעינת תשלומים
       const paymentsRes = await fetch(`/api/payments?faniyaId=${faniyaId}`);
       if (paymentsRes.ok) {
         const paymentsData = await paymentsRes.json();
@@ -3431,9 +4239,24 @@ export default function FaniyaPage() {
     }
   };
 
+  const fetchPricing = async () => {
+    try {
+      const response = await fetch('/api/pricing');
+      if (response.ok) {
+        const data = await response.json();
+        setSkinTypePrices({
+          'רגיל': data.regular || 15,
+          'מאוורר': data.fan || 18
+        });
+      }
+    } catch (error) {
+      console.error('שגיאה בטעינת מחירים:', error);
+    }
+  };
+
   const calculatePrice = () => {
     const length = parseInt(orderForm.length) || 0;
-    const pricePerCm = orderForm.skinType === 'רגיל' ? 15 : 18;
+    const pricePerCm = skinTypePrices[orderForm.skinType as keyof typeof skinTypePrices];
     const discount = parseFloat(orderForm.discount) || 0;
     return Math.max(0, (length * pricePerCm) - discount);
   };
@@ -3535,6 +4358,10 @@ export default function FaniyaPage() {
     }
   };
 
+  const handleInputChange = (field: string, value: any) => {
+    setOrderForm(prev => ({ ...prev, [field]: value }));
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -3561,14 +4388,14 @@ export default function FaniyaPage() {
 
   return (
     <Layout>
-      <div className="space-y-6" dir="rtl">
+      <div className="space-y-6">
         {/* כותרת וסטטיסטיקות */}
         <div>
           <div className="flex justify-between items-center mb-6">
             <div>
               <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
-→ חזור לדף הבית 
-               </Button>
+                ← חזור לדף הבית
+              </Button>
               <h1 className="text-3xl font-bold text-gray-900">{faniya.name}</h1>
             </div>
           </div>
@@ -3619,13 +4446,14 @@ export default function FaniyaPage() {
         </div>
 
         {/* תפריט טאבים */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="new-order">הזמנה חדשה</TabsTrigger>
             <TabsTrigger value="pending">לא מוכנות ({pendingOrders.length})</TabsTrigger>
             <TabsTrigger value="completed">מוכנות ({completedOrders.length})</TabsTrigger>
             <TabsTrigger value="payments">תשלומים ({payments.length})</TabsTrigger>
             <TabsTrigger value="reports">דוחות</TabsTrigger>
+            <TabsTrigger value="payments-report">דוח תשלומים</TabsTrigger>
           </TabsList>
 
           {/* טאב הזמנה חדשה */}
@@ -3635,7 +4463,7 @@ export default function FaniyaPage() {
                 <CardTitle>הזמנה חדשה</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleOrderSubmit} className="space-y-6" dir="rtl">
+                <form onSubmit={handleOrderSubmit} className="space-y-6">
                   {/* פרטים בסיסיים */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -3643,7 +4471,7 @@ export default function FaniyaPage() {
                       <Input
                         id="customerName"
                         value={orderForm.customerName}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, customerName: e.target.value }))}
+                        onChange={(e) => handleInputChange('customerName', e.target.value)}
                         required
                       />
                     </div>
@@ -3655,7 +4483,7 @@ export default function FaniyaPage() {
                         type="number"
                         min="1"
                         value={orderForm.length}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, length: e.target.value }))}
+                        onChange={(e) => handleInputChange('length', e.target.value)}
                         required
                       />
                     </div>
@@ -3665,13 +4493,13 @@ export default function FaniyaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="skinType">סוג סקין *</Label>
-                      <Select value={orderForm.skinType} onValueChange={(value) => setOrderForm(prev => ({ ...prev, skinType: value }))}>
+                      <Select value={orderForm.skinType} onValueChange={(value) => handleInputChange('skinType', value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="רגיל">רגיל (₪15 לס"מ)</SelectItem>
-                          <SelectItem value="מאוורר">מאוורר (₪18 לס"מ)</SelectItem>
+                          <SelectItem value="רגיל">רגיל (₪{skinTypePrices['רגיל']} לס"מ)</SelectItem>
+                          <SelectItem value="מאוורר">מאוורר (₪{skinTypePrices['מאוורר']} לס"מ)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -3681,14 +4509,14 @@ export default function FaniyaPage() {
                       <Input
                         id="color"
                         value={orderForm.color}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, color: e.target.value }))}
+                        onChange={(e) => handleInputChange('color', e.target.value)}
                         required
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="highlights">גוונים בפאה</Label>
-                      <Select value={orderForm.highlights} onValueChange={(value) => setOrderForm(prev => ({ ...prev, highlights: value }))}>
+                      <Select value={orderForm.highlights} onValueChange={(value) => handleInputChange('highlights', value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -3703,7 +4531,7 @@ export default function FaniyaPage() {
 
                     <div>
                       <Label htmlFor="pattern">דוגמת פאה</Label>
-                      <Select value={orderForm.pattern} onValueChange={(value) => setOrderForm(prev => ({ ...prev, pattern: value }))}>
+                      <Select value={orderForm.pattern} onValueChange={(value) => handleInputChange('pattern', value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -3721,7 +4549,7 @@ export default function FaniyaPage() {
                       <Input
                         id="babyHairType"
                         value={orderForm.babyHairType}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, babyHairType: e.target.value }))}
+                        onChange={(e) => handleInputChange('babyHairType', e.target.value)}
                       />
                     </div>
 
@@ -3730,7 +4558,7 @@ export default function FaniyaPage() {
                       <Input
                         id="openingTone"
                         value={orderForm.openingTone}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, openingTone: e.target.value }))}
+                        onChange={(e) => handleInputChange('openingTone', e.target.value)}
                       />
                     </div>
                   </div>
@@ -3745,13 +4573,13 @@ export default function FaniyaPage() {
                         min="0"
                         step="0.01"
                         value={orderForm.discount}
-                        onChange={(e) => setOrderForm(prev => ({ ...prev, discount: e.target.value }))}
+                        onChange={(e) => handleInputChange('discount', e.target.value)}
                       />
                     </div>
-                    <div className="flex items-end">
-                      <div className="text-lg font-semibold">
+                    <div className="flex items-center">
+                      <span className="text-lg font-semibold">
                         מחיר סופי: ₪{calculatePrice().toFixed(2)}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
@@ -3761,7 +4589,7 @@ export default function FaniyaPage() {
                       <Checkbox
                         id="sentToTrass"
                         checked={orderForm.sentToTrass}
-                        onCheckedChange={(checked) => setOrderForm(prev => ({ ...prev, sentToTrass: !!checked }))}
+                        onCheckedChange={(checked) => handleInputChange('sentToTrass', !!checked)}
                       />
                       <Label htmlFor="sentToTrass">נשלח לטרסים</Label>
                     </div>
@@ -3770,7 +4598,7 @@ export default function FaniyaPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
                         <div>
                           <Label htmlFor="trassOperator">אופר טרסים</Label>
-                          <Select value={orderForm.trassOperator} onValueChange={(value) => setOrderForm(prev => ({ ...prev, trassOperator: value }))}>
+                          <Select value={orderForm.trassOperator} onValueChange={(value) => handleInputChange('trassOperator', value)}>
                             <SelectTrigger>
                               <SelectValue placeholder="בחר אופר" />
                             </SelectTrigger>
@@ -3787,7 +4615,7 @@ export default function FaniyaPage() {
                             id="trassSentDate"
                             type="date"
                             value={orderForm.trassSentDate}
-                            onChange={(e) => setOrderForm(prev => ({ ...prev, trassSentDate: e.target.value }))}
+                            onChange={(e) => handleInputChange('trassSentDate', e.target.value)}
                           />
                         </div>
                       </div>
@@ -3800,7 +4628,7 @@ export default function FaniyaPage() {
                     <Textarea
                       id="notes"
                       value={orderForm.notes}
-                      onChange={(e) => setOrderForm(prev => ({ ...prev, notes: e.target.value }))}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
                       rows={3}
                     />
                   </div>
@@ -3817,6 +4645,7 @@ export default function FaniyaPage() {
             </Card>
           </TabsContent>
 
+          {/* טאב הזמנות ממתינות - ממשיך בהודעה הבאה... */}
           {/* טאב הזמנות ממתינות */}
           <TabsContent value="pending" className="space-y-4">
             <div className="flex justify-between items-center">
@@ -3978,7 +4807,6 @@ export default function FaniyaPage() {
               </Button>
             </div>
 
-            {/* טופס תשלום מורכב */}
             {showPaymentForm && (
               <CompoundPaymentForm
                 faniyaId={faniyaId}
@@ -3987,7 +4815,6 @@ export default function FaniyaPage() {
               />
             )}
 
-            {/* רשימת תשלומים */}
             <Card>
               <CardHeader>
                 <CardTitle>היסטוריית תשלומים</CardTitle>
@@ -4001,7 +4828,7 @@ export default function FaniyaPage() {
                       <div key={payment.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <div className="font-semibold text-lg text-green-600">₪{payment.totalAmount?.toFixed(2) || payment.amount?.toFixed(2)}</div>
+                            <div className="font-semibold text-lg text-green-600">₪{(payment.totalAmount || payment.amount || 0).toFixed(2)}</div>
                             <div className="text-sm text-gray-600">
                               {new Date(payment.paymentDate).toLocaleDateString('he-IL')}
                             </div>
@@ -4011,7 +4838,6 @@ export default function FaniyaPage() {
                           </div>
                         </div>
 
-                        {/* הצגת חלקי התשלום */}
                         {payment.paymentParts && payment.paymentParts.length > 0 ? (
                           <div className="space-y-2">
                             <div className="text-sm font-medium text-gray-700">פירוט התשלום:</div>
@@ -4019,9 +4845,9 @@ export default function FaniyaPage() {
                               <div key={part.id} className="bg-gray-50 p-3 rounded text-sm">
                                 <div className="flex justify-between items-start">
                                   <div className="flex items-center gap-2">
-                                    {part.paymentType === 'מזומן'  }
-                                    {part.paymentType === 'צ\'ק' }
-                                    {part.paymentType === 'העברה בנקאית' }
+                                    {part.paymentType === 'מזומן' && <span>💵</span>}
+                                    {part.paymentType === 'צ\'ק' && <span>🧾</span>}
+                                    {part.paymentType === 'העברה בנקאית' && <span>🏦</span>}
                                     <span className="font-medium">{part.paymentType}</span>
                                   </div>
                                   <span className="font-bold text-green-600">₪{part.amount.toFixed(2)}</span>
@@ -4043,15 +4869,10 @@ export default function FaniyaPage() {
                                     אסמכתא: {part.bankReference}
                                   </div>
                                 )}
-                                
-                                {part.notes && (
-                                  <div className="mt-1 text-gray-500 text-xs">{part.notes}</div>
-                                )}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          // תשלום ישן (לתאימות לאחור)
                           <div className="text-sm text-gray-600">
                             {payment.paymentType || 'לא צוין'} 
                             {payment.checkDueDate && (
@@ -4068,7 +4889,6 @@ export default function FaniyaPage() {
               </CardContent>
             </Card>
 
-            {/* סיכום תשלומים */}
             <Card>
               <CardHeader>
                 <CardTitle>סיכום</CardTitle>
@@ -4099,6 +4919,11 @@ export default function FaniyaPage() {
           {/* טאב דוחות */}
           <TabsContent value="reports" className="space-y-4">
             <MonthlyReports faniyaId={faniyaId} faniyaName={faniya.name} />
+          </TabsContent>
+
+          {/* טאב דוח תשלומים */}
+          <TabsContent value="payments-report" className="space-y-4">
+            <PaymentsOnlyReport faniyaId={faniyaId} faniyaName={faniya.name} />
           </TabsContent>
         </Tabs>
       </div>

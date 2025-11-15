@@ -6199,7 +6199,7 @@ export default function FaniyaPage() {
                   {editOrderForm.sentToTrass && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label>אופרטור</Label>
+                        <Label>אופן השליחה</Label>
                         <Input
                           value={editOrderForm.trassOperator}
                           onChange={(e) => handleEditInputChange('trassOperator', e.target.value)}

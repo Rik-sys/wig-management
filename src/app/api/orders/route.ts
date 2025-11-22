@@ -582,7 +582,7 @@ export async function POST(request: NextRequest) {
         babyHairType: orderData.babyHairType?.trim() || null,
         openingTone: orderData.openingTone?.trim() || null,
         pattern: orderData.pattern || 'ייבוש טבעי תנועה גדולה',
-        customPattern: orderData.customPattern?.trim() || null,
+        
         notes: orderData.notes?.trim() || null,
         discount: parseFloat(orderData.discount) || 0,
         totalPrice: totalPrice,

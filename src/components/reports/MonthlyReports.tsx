@@ -578,90 +578,159 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
     }
   }, [selectedYear, selectedMonth, faniyaId]);
 
+  // const loadMonthlyData = async (year: number, month: number) => {
+  //   setLoading(true);
+  //   try {
+  //     // טעינת הזמנות
+  //     const ordersResponse = await fetch(`/api/orders?faniyaId=${faniyaId}`);
+  //     const allOrders: Order[] = ordersResponse.ok ? await ordersResponse.json() : [];
+      
+  //     const monthOrders = allOrders.filter(order => {
+  //       const orderDate = new Date(order.orderDate);
+  //       return orderDate.getFullYear() === year && orderDate.getMonth() + 1 === month;
+  //     });
+
+  //     // טעינת תשלומים
+  //     const paymentsResponse = await fetch(`/api/payments?faniyaId=${faniyaId}`);
+  //     const allPayments: Payment[] = paymentsResponse.ok ? await paymentsResponse.json() : [];
+      
+  //     const monthPayments = allPayments.filter(payment => {
+  //       const paymentDate = new Date(payment.paymentDate);
+  //       return paymentDate.getFullYear() === year && paymentDate.getMonth() + 1 === month;
+  //     });
+
+  //     // ✅ טעינת עדכוני חוב
+  //     const debtResponse = await fetch(`/api/debt-history?faniyaId=${faniyaId}`);
+  //     const allDebtTransactions: DebtTransaction[] = debtResponse.ok ? await debtResponse.json() : [];
+      
+  //     const monthDebtTransactions = allDebtTransactions.filter(transaction => {
+  //       const transactionDate = new Date(transaction.createdAt);
+  //       return transactionDate.getFullYear() === year && transactionDate.getMonth() + 1 === month;
+  //     });
+
+  //     // חישוב חוב מחודש קודם
+  //     const previousMonthDate = new Date(year, month - 2, 1); // חודש קודם
+  //     const previousMonthEnd = new Date(year, month - 1, 0); // סוף חודש קודם
+
+  //     const previousOrders = allOrders.filter(order => {
+  //       const orderDate = new Date(order.orderDate);
+  //       return orderDate <= previousMonthEnd;
+  //     });
+
+  //     const previousPayments = allPayments.filter(payment => {
+  //       const paymentDate = new Date(payment.paymentDate);
+  //       return paymentDate <= previousMonthEnd;
+  //     });
+
+  //     const previousDebtTransactions = allDebtTransactions.filter(transaction => {
+  //       const transactionDate = new Date(transaction.createdAt);
+  //       return transactionDate <= previousMonthEnd;
+  //     });
+
+  //     const totalPreviousOrders = previousOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+  //     const totalPreviousPayments = previousPayments.reduce((sum, payment) => 
+  //       sum + (payment.totalAmount || payment.amount || 0), 0);
+  //     const totalPreviousDebtAdjustments = previousDebtTransactions
+  //       .filter(t => t.type === 'manual')
+  //       .reduce((sum, t) => sum + t.amount, 0);
+
+  //     const previousMonthDebt = totalPreviousOrders - totalPreviousPayments + totalPreviousDebtAdjustments;
+
+  //     // חישוב נתונים לחודש הנוכחי
+  //     const totalRevenue = monthOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+  //     const totalPayments = monthPayments.reduce((sum, payment) => 
+  //       sum + (payment.totalAmount || payment.amount || 0), 0);
+      
+  //     const currentMonthDebt = previousMonthDebt + totalRevenue - totalPayments;
+
+  //     setMonthlyData({
+  //       month,
+  //       year,
+  //       orders: monthOrders,
+  //       payments: monthPayments,
+  //       debtTransactions: monthDebtTransactions, // ✅ הוספה
+  //       totalRevenue,
+  //       totalPayments,
+  //       previousMonthDebt,
+  //       currentMonthDebt,
+  //       ordersCount: monthOrders.length
+  //     });
+
+  //   } catch (error) {
+  //     console.error('שגיאה בטעינת נתונים חודשיים:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const loadMonthlyData = async (year: number, month: number) => {
-    setLoading(true);
-    try {
-      // טעינת הזמנות
-      const ordersResponse = await fetch(`/api/orders?faniyaId=${faniyaId}`);
-      const allOrders: Order[] = ordersResponse.ok ? await ordersResponse.json() : [];
-      
-      const monthOrders = allOrders.filter(order => {
-        const orderDate = new Date(order.orderDate);
-        return orderDate.getFullYear() === year && orderDate.getMonth() + 1 === month;
-      });
+  setLoading(true);
+  try {
+    // קבלת נתוני החוב לחודש הזה
+    const debtRes = await fetch(
+      `/api/debt-calculations?faniyaId=${faniyaId}&year=${year}&month=${month}`
+    );
 
-      // טעינת תשלומים
-      const paymentsResponse = await fetch(`/api/payments?faniyaId=${faniyaId}`);
-      const allPayments: Payment[] = paymentsResponse.ok ? await paymentsResponse.json() : [];
-      
-      const monthPayments = allPayments.filter(payment => {
-        const paymentDate = new Date(payment.paymentDate);
-        return paymentDate.getFullYear() === year && paymentDate.getMonth() + 1 === month;
-      });
-
-      // ✅ טעינת עדכוני חוב
-      const debtResponse = await fetch(`/api/debt-history?faniyaId=${faniyaId}`);
-      const allDebtTransactions: DebtTransaction[] = debtResponse.ok ? await debtResponse.json() : [];
-      
-      const monthDebtTransactions = allDebtTransactions.filter(transaction => {
-        const transactionDate = new Date(transaction.createdAt);
-        return transactionDate.getFullYear() === year && transactionDate.getMonth() + 1 === month;
-      });
-
-      // חישוב חוב מחודש קודם
-      const previousMonthDate = new Date(year, month - 2, 1); // חודש קודם
-      const previousMonthEnd = new Date(year, month - 1, 0); // סוף חודש קודם
-
-      const previousOrders = allOrders.filter(order => {
-        const orderDate = new Date(order.orderDate);
-        return orderDate <= previousMonthEnd;
-      });
-
-      const previousPayments = allPayments.filter(payment => {
-        const paymentDate = new Date(payment.paymentDate);
-        return paymentDate <= previousMonthEnd;
-      });
-
-      const previousDebtTransactions = allDebtTransactions.filter(transaction => {
-        const transactionDate = new Date(transaction.createdAt);
-        return transactionDate <= previousMonthEnd;
-      });
-
-      const totalPreviousOrders = previousOrders.reduce((sum, order) => sum + order.totalPrice, 0);
-      const totalPreviousPayments = previousPayments.reduce((sum, payment) => 
-        sum + (payment.totalAmount || payment.amount || 0), 0);
-      const totalPreviousDebtAdjustments = previousDebtTransactions
-        .filter(t => t.type === 'manual')
-        .reduce((sum, t) => sum + t.amount, 0);
-
-      const previousMonthDebt = totalPreviousOrders - totalPreviousPayments + totalPreviousDebtAdjustments;
-
-      // חישוב נתונים לחודש הנוכחי
-      const totalRevenue = monthOrders.reduce((sum, order) => sum + order.totalPrice, 0);
-      const totalPayments = monthPayments.reduce((sum, payment) => 
-        sum + (payment.totalAmount || payment.amount || 0), 0);
-      
-      const currentMonthDebt = previousMonthDebt + totalRevenue - totalPayments;
-
-      setMonthlyData({
-        month,
-        year,
-        orders: monthOrders,
-        payments: monthPayments,
-        debtTransactions: monthDebtTransactions, // ✅ הוספה
-        totalRevenue,
-        totalPayments,
-        previousMonthDebt,
-        currentMonthDebt,
-        ordersCount: monthOrders.length
-      });
-
-    } catch (error) {
-      console.error('שגיאה בטעינת נתונים חודשיים:', error);
-    } finally {
-      setLoading(false);
+    if (!debtRes.ok) {
+      throw new Error('Failed to fetch debt data');
     }
-  };
+
+    const debtData = await debtRes.json();
+
+    // קבלת הזמנות לחודש
+    const ordersRes = await fetch(`/api/orders?faniyaId=${faniyaId}`);
+    const allOrders: Order[] = ordersRes.ok ? await ordersRes.json() : [];
+
+    const monthOrders = allOrders.filter((order) => {
+      const orderDate = new Date(order.orderDate);
+      return (
+        orderDate.getFullYear() === year &&
+        orderDate.getMonth() + 1 === month
+      );
+    });
+
+    // קבלת תשלומים לחודש
+    const paymentsRes = await fetch(`/api/payments?faniyaId=${faniyaId}`);
+    const allPayments: Payment[] = paymentsRes.ok
+      ? await paymentsRes.json()
+      : [];
+
+    const monthPayments = allPayments.filter((payment) => {
+      const paymentDate = new Date(payment.paymentDate);
+      return (
+        paymentDate.getFullYear() === year &&
+        paymentDate.getMonth() + 1 === month
+      );
+    });
+
+    // חישוב סכום הזמנות שנמסרו בחודש
+    const totalRevenue = monthOrders
+      .filter((order) => order.isCompleted)
+      .reduce((sum, order) => sum + order.totalPrice, 0);
+
+    // חישוב סכום תשלומים בחודש
+    const totalPayments = monthPayments.reduce(
+      (sum, payment) => sum + (payment.totalAmount || 0),
+      0
+    );
+    setMonthlyData({
+      month,
+      year,
+      orders: monthOrders,
+      payments: monthPayments,
+      debtTransactions: debtData.debtTransactions || [],
+      totalRevenue,
+      totalPayments,
+      previousMonthDebt: debtData.previousMonthDebt,
+      currentMonthDebt: debtData.currentMonthDebt,
+      ordersCount: monthOrders.length,
+    });
+  } catch (error) {
+    console.error('שגיאה בטעינת נתונים חודשיים:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const generateReport = () => {
     if (!monthlyData) return;

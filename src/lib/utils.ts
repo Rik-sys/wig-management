@@ -367,7 +367,7 @@ export async function addDebtTransaction(
     await prisma.faniya.update({
       where: { id: faniyaId },
       data: {
-        totalDebt: faniya.totalDebt + amount
+        totalDebt: Math.max(0, faniya.totalDebt + amount)
       }
     });
 
@@ -402,7 +402,7 @@ export async function adjustFaniyaDebt(faniyaId: string, adjustment: number) {
       return;
     }
 
-    const newDebt = faniya.totalDebt + adjustment;
+    const newDebt = Math.max(0, faniya.totalDebt + adjustment);
 
     await prisma.faniya.update({
       where: {

@@ -124,6 +124,8 @@ async function main() {
       name: 'מנהל ראשי'
     }
   });
+
+  
   console.log('✅ נוצר משתמש admin (שם משתמש: admin, סיסמה: admin123)');
 
   // יצירת משתמש מזכירה

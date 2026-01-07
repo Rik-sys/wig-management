@@ -6570,7 +6570,7 @@ export default function FaniyaPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('new-order');
-
+  const [debtTransactions, setDebtTransactions] = useState<any[]>([]);
   // State לטופס הזמנה חדשה
   const [orderForm, setOrderForm] = useState({
     customerName: '',
@@ -6641,6 +6641,13 @@ export default function FaniyaPage() {
         setPayments(paymentsData);
       }
 
+      // ✅ טעינת עדכוני חוב
+    const debtRes = await fetch(`/api/debt-history?faniyaId=${faniyaId}`);
+    if (debtRes.ok) {
+      const debtData = await debtRes.json();
+      setDebtTransactions(debtData);
+    }
+      
     } catch (error) {
       console.error('שגיאה בטעינת נתונים:', error);
     } finally {
@@ -7591,15 +7598,29 @@ export default function FaniyaPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">₪{faniya.totalPayments.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-blue-600">₪{payments.reduce((sum, p) => sum + (p.totalAmount || p.amount || 0), 0).toFixed(2)}</div>
+                    {/* <div className="text-2xl font-bold text-blue-600">₪{faniya.totalPayments.toFixed(2)}</div> */}
                     <div className="text-sm text-gray-600">סה"כ תשלומים</div>
                   </div>
-                  <div className="text-center">
+                  {/* <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
                       ₪{orders.reduce((sum, order) => sum + order.totalPrice, 0).toFixed(2)}
                     </div>
                     <div className="text-sm text-gray-600">סה"כ הזמנות</div>
-                  </div>
+                  </div> */}
+
+<div className="text-center">
+  <div className="text-2xl font-bold text-orange-600">
+    ₪{(
+      orders.reduce((sum, order) => sum + order.totalPrice, 0) +
+      debtTransactions
+        .filter(t => t.type === 'manual')
+        .reduce((sum, t) => sum + t.amount, 0)
+    ).toFixed(2)}
+  </div>
+  <div className="text-sm text-gray-600">סה"כ הזמנות</div>
+</div>
+
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${faniya.totalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
                       ₪{faniya.totalDebt.toFixed(2)}

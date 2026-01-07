@@ -663,7 +663,98 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
   //   }
   // };
 
-  const loadMonthlyData = async (year: number, month: number) => {
+//   const loadMonthlyData = async (year: number, month: number) => {
+//   setLoading(true);
+//   try {
+//     // קבלת נתוני החוב לחודש הזה
+//     const debtRes = await fetch(
+//       `/api/debt-calculations?faniyaId=${faniyaId}&year=${year}&month=${month}`
+//     );
+
+//     if (!debtRes.ok) {
+//       throw new Error('Failed to fetch debt data');
+//     }
+
+//     const debtData = await debtRes.json();
+
+//     // קבלת הזמנות לחודש
+//     const ordersRes = await fetch(`/api/orders?faniyaId=${faniyaId}`);
+//     const allOrders: Order[] = ordersRes.ok ? await ordersRes.json() : [];
+
+//     const monthOrders = allOrders.filter((order) => {
+//       const orderDate = new Date(order.orderDate);
+//       return (
+//         orderDate.getFullYear() === year &&
+//         orderDate.getMonth() + 1 === month
+//       );
+//     });
+
+//     // קבלת תשלומים לחודש
+//     const paymentsRes = await fetch(`/api/payments?faniyaId=${faniyaId}`);
+//     const allPayments: Payment[] = paymentsRes.ok
+//       ? await paymentsRes.json()
+//       : [];
+
+//     const monthPayments = allPayments.filter((payment) => {
+//       const paymentDate = new Date(payment.paymentDate);
+//       return (
+//         paymentDate.getFullYear() === year &&
+//         paymentDate.getMonth() + 1 === month
+//       );
+//     });
+
+//     // חישוב סכום הזמנות שנמסרו בחודש
+//     const totalRevenue = monthOrders
+//       .filter((order) => order.isCompleted)
+//       .reduce((sum, order) => sum + order.totalPrice, 0);
+
+//     // חישוב סכום תשלומים בחודש
+//     const totalPayments = monthPayments.reduce(
+//       (sum, payment) => sum + (payment.totalAmount || 0),
+//       0
+//     );
+//     setMonthlyData({
+//       month,
+//       year,
+//       orders: monthOrders,
+//       payments: monthPayments,
+//       debtTransactions: debtData.debtTransactions || [],
+//       totalRevenue,
+//       totalPayments,
+//       previousMonthDebt: debtData.previousMonthDebt,
+//       currentMonthDebt: debtData.currentMonthDebt,
+//       ordersCount: monthOrders.length,
+//     });
+//   } catch (error) {
+//     console.error('שגיאה בטעינת נתונים חודשיים:', error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+//   const generateReport = () => {
+//     if (!monthlyData) return;
+ 
+//     // ✅ הפרדת עדכוני חוב רגילים מעדכוני חוב מחודש קודם
+//     const previousMonthDebtUpdates = monthlyData.debtTransactions.filter(
+//       t => t.type === 'manual' && t.description.includes('עדכון חוב מחודש קודם')
+//     );
+    
+//     const regularDebtUpdates = monthlyData.debtTransactions.filter(
+//       t => t.type === 'manual' && !t.description.includes('עדכון חוב מחודש קודם')
+//     );
+
+//     // חישוב סכום עדכוני חוב רגילים
+//     const totalRegularDebtUpdates = regularDebtUpdates.reduce((sum, t) => sum + t.amount, 0);
+    
+//     // חישוב סכום עדכוני חוב מחודש קודם
+//     const totalPreviousMonthDebtUpdates = previousMonthDebtUpdates.reduce((sum, t) => sum + t.amount, 0);
+    
+//     // חישוב חוב מחודש קודם כולל העדכונים שלו
+//     const adjustedPreviousMonthDebt = monthlyData.previousMonthDebt + totalPreviousMonthDebtUpdates;
+
+
+const loadMonthlyData = async (year: number, month: number) => {
   setLoading(true);
   try {
     // קבלת נתוני החוב לחודש הזה
@@ -703,6 +794,21 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
       );
     });
 
+    // ✅✅✅ הוספה חדשה - קבלת עדכוני חוב לחודש ✅✅✅
+    const debtTransactionsRes = await fetch(`/api/debt-history?faniyaId=${faniyaId}`);
+    const allDebtTransactions: DebtTransaction[] = debtTransactionsRes.ok
+      ? await debtTransactionsRes.json()
+      : [];
+
+    const monthDebtTransactions = allDebtTransactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.createdAt);
+      return (
+        transactionDate.getFullYear() === year &&
+        transactionDate.getMonth() + 1 === month
+      );
+    });
+    // ✅✅✅ סוף ההוספה ✅✅✅
+
     // חישוב סכום הזמנות שנמסרו בחודש
     const totalRevenue = monthOrders
       .filter((order) => order.isCompleted)
@@ -718,7 +824,7 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
       year,
       orders: monthOrders,
       payments: monthPayments,
-      debtTransactions: debtData.debtTransactions || [],
+      debtTransactions: monthDebtTransactions, // ✅ שינוי כאן!
       totalRevenue,
       totalPayments,
       previousMonthDebt: debtData.previousMonthDebt,
@@ -734,7 +840,7 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
 
   const generateReport = () => {
     if (!monthlyData) return;
-
+ 
     // ✅ הפרדת עדכוני חוב רגילים מעדכוני חוב מחודש קודם
     const previousMonthDebtUpdates = monthlyData.debtTransactions.filter(
       t => t.type === 'manual' && t.description.includes('עדכון חוב מחודש קודם')
@@ -752,12 +858,12 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
     
     // חישוב חוב מחודש קודם כולל העדכונים שלו
     const adjustedPreviousMonthDebt = monthlyData.previousMonthDebt + totalPreviousMonthDebtUpdates;
-
     const reportContent = `
       <!DOCTYPE html>
       <html dir="rtl" lang="he">
       <head>
         <meta charset="UTF-8">
+        <title>דוח_${faniyaName}_${monthlyData.month}_${monthlyData.year}</title>
         <style>
           body { 
             font-family: Arial, sans-serif; 
@@ -958,20 +1064,44 @@ export function MonthlyReports({ faniyaId, faniyaName }: MonthlyReportsProps) {
       </html>
     `;
 
-    const blob = new Blob([reportContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `דוח_${faniyaName}_${monthlyData.month}_${monthlyData.year}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
 
-    alert('דוח ירד בהצלחה! פתח אותו בדפדפן והדפס לPDF');
+
+    // const blob = new Blob([reportContent], { type: 'text/html;charset=utf-8' });
+    // const url = URL.createObjectURL(blob);
+    
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.download = `דוח_${faniyaName}_${monthlyData.month}_${monthlyData.year}.html`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // URL.revokeObjectURL(url);
+
+    // alert('דוח ירד בהצלחה! פתח אותו בדפדפן והדפס לPDF');
+ 
+ // פתיחת חלון חדש עם הדוח
+ const printWindow = window.open('', '_blank');
+    
+ if (printWindow) {
+   printWindow.document.write(reportContent);
+   printWindow.document.close();
+   
+   // המתנה לטעינה ואז הדפסה אוטומטית
+   printWindow.onload = () => {
+     setTimeout(() => {
+       printWindow.print();
+     }, 250);
+   };
+ } else {
+   alert('נא לאפשר חלונות קופצים כדי להדפיס את הדוח');
+ }
+
+
+
   };
 
+
+  
   const currentYear = new Date().getFullYear();
   const years = Array.from({length: 5}, (_, i) => currentYear - i);
 

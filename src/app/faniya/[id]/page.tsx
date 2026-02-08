@@ -6603,7 +6603,8 @@ export default function FaniyaPage() {
   // State למחיקות
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
-
+  const [deletingPaymentPartId, setDeletingPaymentPartId] = useState<string | null>(null);
+ 
   // State לעדכון חוב ידני
   const [showDebtDialog, setShowDebtDialog] = useState(false);
   const [manualDebt, setManualDebt] = useState('');
@@ -6865,6 +6866,56 @@ export default function FaniyaPage() {
       }
     } catch (error) {
       alert('שגיאה במחיקת תשלום');
+    }
+  };
+
+  // const handleDeletePaymentPart = async (partId: string) => {
+  //   try {
+  //     const response = await fetch(`/api/payments/parts/${partId}`, {
+  //       method: 'DELETE'
+  //     });
+  
+  //     if (response.ok) {
+  //       const result = await response.json();
+  //       alert(result.message);
+  //       fetchFaniyaData();
+  //     } else {
+  //       alert('שגיאה במחיקה');
+  //     }
+  //   } catch (error) {
+  //     alert('שגיאה במחיקה');
+  //   } finally {
+  //     setDeletingPaymentPartId(null);
+  //   }
+  // };
+
+  const handleDeletePaymentPart = async (partId: string) => {
+    try {
+      const response = await fetch(`/api/payments/parts/${partId}`, {
+        method: 'DELETE'
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.deletedPayment) {
+          alert('התשלום כולו נמחק (היה חלק אחרון)');
+        } else {
+          alert(`חלק התשלום נמחק בהצלחה. הסכום שהוחזר לחוב: ₪${result.deletedAmount.toFixed(2)}`);
+        }
+        
+        // ✅ רענון הנתונים - זה הקריטי!
+        await fetchFaniyaData();
+        
+      } else {
+        const error = await response.json();
+        alert('שגיאה במחיקת חלק תשלום: ' + (error.error || 'שגיאה לא ידועה'));
+      }
+    } catch (error) {
+      console.error('שגיאה במחיקת חלק תשלום:', error);
+      alert('שגיאה במחיקת חלק תשלום');
+    } finally {
+      setDeletingPaymentPartId(null);
     }
   };
 
@@ -7653,14 +7704,25 @@ export default function FaniyaPage() {
                             {pmt.paymentParts.map((part: any) => (
                               <div key={part.id} className="bg-gray-50 p-3 rounded text-sm">
                                 <div className="flex justify-between items-start">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-1">
                                     {part.paymentType === 'מזומן' && <span>💵</span>}
                                     {part.paymentType === 'צ\'ק' && <span>🧾</span>}
                                     {part.paymentType === 'העברה בנקאית' && <span>🏦</span>}
                                     <span className="font-medium">{part.paymentType}</span>
                                   </div>
+                                  <div className="flex items-center gap-2">
                                   <span className="font-bold text-green-600">₪{part.amount.toFixed(2)}</span>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => setDeletingPaymentPartId(part.id)}
+                                    className="h-6 w-6 hover:bg-red-100 hover:text-red-600"
+                                    title="מחק חלק זה"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
                                 </div>
+                              </div>      
                                 
                                 {part.paymentType === 'צ\'ק' && (
                                   <div className="mt-1 text-gray-600">
@@ -7925,7 +7987,7 @@ export default function FaniyaPage() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog open={!!deletingOrderId} onOpenChange={(open) => !open && setDeletingOrderId(null)}>
+         <AlertDialog open={!!deletingOrderId} onOpenChange={(open) => !open && setDeletingOrderId(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>האם למחוק הזמנה זו?</AlertDialogTitle>
@@ -7958,6 +8020,26 @@ export default function FaniyaPage() {
               <AlertDialogAction
                 className="bg-red-600 hover:bg-red-700"
                 onClick={() => deletingPaymentId && handleDeletePayment(deletingPaymentId)}
+              >
+                מחק
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!deletingPaymentPartId} onOpenChange={(open) => !open && setDeletingPaymentPartId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>למחוק חלק זה?</AlertDialogTitle>
+              <AlertDialogDescription>
+                הסכום יוחזר לחוב. אם זה החלק האחרון, התשלום כולו יימחק.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => deletingPaymentPartId && handleDeletePaymentPart(deletingPaymentPartId)}
               >
                 מחק
               </AlertDialogAction>

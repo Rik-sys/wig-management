@@ -773,10 +773,18 @@ const loadMonthlyData = async (year: number, month: number) => {
     const allOrders: Order[] = ordersRes.ok ? await ordersRes.json() : [];
 
     const monthOrders = allOrders.filter((order) => {
-      const orderDate = new Date(order.orderDate);
+      // const orderDate = new Date(order.orderDate);
+      // return (
+      //   orderDate.getFullYear() === year &&
+      //   orderDate.getMonth() + 1 === month
+      // );
+
+
+      if (!order.deliveryDate) return false;
+      const deliveryDate = new Date(order.deliveryDate);
       return (
-        orderDate.getFullYear() === year &&
-        orderDate.getMonth() + 1 === month
+        deliveryDate.getFullYear() === year &&
+        deliveryDate.getMonth() + 1 === month
       );
     });
 

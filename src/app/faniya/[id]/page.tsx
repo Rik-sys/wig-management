@@ -6613,6 +6613,13 @@ export default function FaniyaPage() {
   const [debtHistory, setDebtHistory] = useState<any[]>([]);
   const [showDebtHistoryDialog, setShowDebtHistoryDialog] = useState(false);
 
+  // State לסינון הזמנות מוכנות לפי חודש
+  const [selectedCompletedYear, setSelectedCompletedYear] = useState<number>(new Date().getFullYear());
+  const [selectedCompletedMonth, setSelectedCompletedMonth] = useState<number | 'all'>('all');
+
+  // State לצפייה בפרטי הזמנה מוכנה
+  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+
   useEffect(() => {
     if (faniyaId) {
       fetchFaniyaData();
@@ -6979,6 +6986,25 @@ export default function FaniyaPage() {
   const pendingOrders = orders.filter(order => !order.isCompleted);
   const completedOrders = orders.filter(order => order.isCompleted);
 
+  // קבועים לסינון לפי חודש
+  const HEBREW_MONTHS = [
+    'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+    'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+  ];
+  
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({length: 5}, (_, i) => currentYear - i);
+
+  // סינון הזמנות מוכנות לפי חודש ושנה
+  const filteredCompletedOrders = completedOrders.filter(order => {
+    if (selectedCompletedMonth === 'all') return true;
+    if (!order.deliveryDate) return false;
+    
+    const deliveryDate = new Date(order.deliveryDate);
+    return deliveryDate.getFullYear() === selectedCompletedYear && 
+           deliveryDate.getMonth() + 1 === selectedCompletedMonth;
+  });
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -7110,6 +7136,15 @@ export default function FaniyaPage() {
             </Card>
           </div>
         </div>
+
+
+
+
+
+
+
+
+        
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6">
@@ -7419,20 +7454,85 @@ export default function FaniyaPage() {
           </TabsContent>
 
           <TabsContent value="completed" className="space-y-4">
+            {/* סינון לפי חודש */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">שנה</label>
+                    <Select 
+                      value={selectedCompletedYear.toString()} 
+                      onValueChange={(value) => setSelectedCompletedYear(parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map(year => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">חודש</label>
+                    <Select 
+                      value={selectedCompletedMonth.toString()} 
+                      onValueChange={(value) => setSelectedCompletedMonth(value === 'all' ? 'all' : parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">כל החודשים</SelectItem>
+                        {HEBREW_MONTHS.map((monthName, index) => (
+                          <SelectItem key={index + 1} value={(index + 1).toString()}>
+                            {monthName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <div className="text-sm text-gray-600">
+                      {selectedCompletedMonth === 'all' 
+                        ? `מציג ${filteredCompletedOrders.length} הזמנות מוכנות מכל החודשים ב-${selectedCompletedYear}`
+                        : `מציג ${filteredCompletedOrders.length} הזמנות שנמסרו ב-${HEBREW_MONTHS[selectedCompletedMonth - 1]} ${selectedCompletedYear}`
+                      }
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* רשימת הזמנות */}
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">הזמנות מוכנות ({completedOrders.length})</h3>
+              <h3 className="text-lg font-semibold">
+                הזמנות מוכנות ({filteredCompletedOrders.length})
+              </h3>
             </div>
             
             <div className="grid gap-4">
-              {completedOrders.length === 0 ? (
+              {filteredCompletedOrders.length === 0 ? (
                 <Card>
                   <CardContent className="p-6 text-center text-gray-500">
-                    אין הזמנות מוכנות
+                    {selectedCompletedMonth === 'all' 
+                      ? 'אין הזמנות מוכנות'
+                      : `אין הזמנות שנמסרו ב-${HEBREW_MONTHS[selectedCompletedMonth - 1]} ${selectedCompletedYear}`
+                    }
                   </CardContent>
                 </Card>
               ) : (
-                completedOrders.map((order) => (
-                  <Card key={order.id}>
+                filteredCompletedOrders.map((order) => (
+                  <Card 
+                    key={order.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setViewingOrder(order)}
+                  >
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -7452,7 +7552,10 @@ export default function FaniyaPage() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => setDeletingOrderId(order.id)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // מונע פתיחת הדיאלוג כשלוחצים על המחיקה
+                              setDeletingOrderId(order.id);
+                            }}
                             className="h-8 w-8 hover:bg-red-100 hover:text-red-600 flex-shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -7480,6 +7583,10 @@ export default function FaniyaPage() {
                           <span className="font-medium">הערות:</span> {order.notes}
                         </div>
                       )}
+                      
+                      <div className="mt-3 text-xs text-gray-500 text-center">
+                        לחץ לצפייה בפרטים המלאים
+                      </div>
                     </CardContent>
                   </Card>
                 ))
@@ -7895,6 +8002,193 @@ export default function FaniyaPage() {
                 </div>
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* דיאלוג לצפייה בפרטי הזמנה מוכנה */}
+        <Dialog open={!!viewingOrder} onOpenChange={(open) => !open && setViewingOrder(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            {viewingOrder && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">
+                    פרטי הזמנה - {viewingOrder.customerName}
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-6 py-4">
+                  {/* כרטיס סטטוס ומחיר */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <Badge className="bg-green-100 text-green-800 text-base px-3 py-1">
+                          ✓ הזמנה מוכנה ונמסרה
+                        </Badge>
+                      </div>
+                      <div className="text-left">
+                        <div className="text-sm text-gray-600">מחיר סופי</div>
+                        <div className="text-3xl font-bold text-green-600">
+                          ₪{viewingOrder.totalPrice.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* תאריכים */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">תאריכים</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-600">תאריך הזמנה</div>
+                        <div className="font-semibold">
+                          {new Date(viewingOrder.orderDate).toLocaleDateString('he-IL')}
+                        </div>
+                      </div>
+                      {viewingOrder.deliveryDate && (
+                        <div>
+                          <div className="text-sm text-gray-600">תאריך מסירה</div>
+                          <div className="font-semibold text-green-600">
+                            {new Date(viewingOrder.deliveryDate).toLocaleDateString('he-IL')}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* מפרטי הפאה */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">מפרטי הפאה</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded">
+                          <div className="text-sm text-gray-600">אורך</div>
+                          <div className="font-semibold text-lg">{viewingOrder.length} ס"מ</div>
+                        </div>
+                        
+                        <div className="p-3 bg-gray-50 rounded">
+                          <div className="text-sm text-gray-600">סוג סקין</div>
+                          <div className="font-semibold text-lg">{viewingOrder.skinType}</div>
+                        </div>
+                        
+                        <div className="p-3 bg-gray-50 rounded">
+                          <div className="text-sm text-gray-600">צבע</div>
+                          <div className="font-semibold text-lg">{viewingOrder.color}</div>
+                        </div>
+                        
+                        <div className="p-3 bg-gray-50 rounded">
+                          <div className="text-sm text-gray-600">גוונים</div>
+                          <div className="font-semibold text-lg">
+                            {viewingOrder.highlights || 'לא צוין'}
+                          </div>
+                        </div>
+                        
+                        {viewingOrder.babyHairType && (
+                          <div className="p-3 bg-gray-50 rounded">
+                            <div className="text-sm text-gray-600">סוג בייביהר</div>
+                            <div className="font-semibold text-lg">{viewingOrder.babyHairType}</div>
+                          </div>
+                        )}
+                        
+                        {viewingOrder.openingTone && (
+                          <div className="p-3 bg-gray-50 rounded">
+                            <div className="text-sm text-gray-600">גוון פתיחה</div>
+                            <div className="font-semibold text-lg">{viewingOrder.openingTone}</div>
+                          </div>
+                        )}
+                        
+                        <div className="p-3 bg-gray-50 rounded md:col-span-2">
+                          <div className="text-sm text-gray-600">דוגמה</div>
+                          <div className="font-semibold text-lg">{viewingOrder.pattern}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* פרטי מחיר */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">פירוט מחיר</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {viewingOrder.discount > 0 && (
+                          <>
+                            <div className="flex justify-between text-gray-600">
+                              <span>מחיר לפני הנחה</span>
+                              <span>₪{(viewingOrder.totalPrice + viewingOrder.discount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-red-600">
+                              <span>הנחה</span>
+                              <span>-₪{viewingOrder.discount.toFixed(2)}</span>
+                            </div>
+                            <div className="border-t pt-2"></div>
+                          </>
+                        )}
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>מחיר סופי</span>
+                          <span className="text-green-600">₪{viewingOrder.totalPrice.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* פרטי טרסים */}
+                  {viewingOrder.sentToTrass && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">פרטי שליחה לטרסים</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {viewingOrder.trassOperator && (
+                            <div>
+                              <div className="text-sm text-gray-600">אופן שליחה</div>
+                              <div className="font-semibold">{viewingOrder.trassOperator}</div>
+                            </div>
+                          )}
+                          {viewingOrder.trassSentDate && (
+                            <div>
+                              <div className="text-sm text-gray-600">תאריך שליחה</div>
+                              <div className="font-semibold">
+                                {new Date(viewingOrder.trassSentDate).toLocaleDateString('he-IL')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* הערות */}
+                  {viewingOrder.notes && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">הערות</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg whitespace-pre-wrap">
+                          {viewingOrder.notes}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* כפתור סגירה */}
+                  <div className="flex justify-end pt-4">
+                    <Button 
+                      onClick={() => setViewingOrder(null)}
+                      className="px-8"
+                    >
+                      סגור
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -1785,13 +1785,26 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">הזמנות מוכנות</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.completedOrders}</div>
+            </CardContent>
+          </Card> */}
+          <Card 
+            className="cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => window.location.href = '/orders/completed'}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">הזמנות מוכנות</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{stats.completedOrders}</div>
+              <p className="text-xs text-muted-foreground mt-1">לחץ לצפייה</p>
             </CardContent>
           </Card>
 

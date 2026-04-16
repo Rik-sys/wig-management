@@ -69,103 +69,125 @@ export function PaymentsOnlyReport({ faniyaId, faniyaName }: PaymentsOnlyReportP
             font-family: Arial, sans-serif; 
             direction: rtl; 
             text-align: right;
-            padding: 40px;
-            line-height: 1.8;
+            padding: 20px;
+            line-height: 1.5;
+            margin: 0;
           }
           .header {
             text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
           }
           .title {
-            font-size: 28px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 3px;
+            color: #000;
           }
           .subtitle {
-            font-size: 20px;
-            color: #666;
+            font-size: 12px;
+            color: #000;
+            margin-bottom: 2px;
           }
-          .section {
-            margin: 30px 0;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 8px;
+          .doc-title {
+            font-size: 11px;
+            color: #000;
           }
-          .payment-item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
           }
-          .payment-item:last-child {
-            border-bottom: none;
+          th {
+            padding: 8px 5px;
+            font-size: 11px;
+            font-weight: bold;
+            border: none;
+            text-align: right;
+            color: #000;
+          }
+          td {
+            padding: 6px 5px;
+            font-size: 11px;
+            border: none;
+            text-align: right;
+            color: #000;
+          }
+          tr {
+            border: none;
           }
           .amount {
             font-weight: bold;
-            color: #16a34a;
+            color: #000;
           }
-          .total {
-            font-size: 18px;
+          .payment-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            padding: 6px 0;
+            font-size: 11px;
+            align-items: center;
+          }
+          .payment-row.total-row {
             font-weight: bold;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #333;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+            margin-top: 10px;
+            padding-bottom: 0;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 0;
+            font-size: 10px;
+            color: #000;
             text-align: center;
           }
-          .payment-parts {
-            margin-top: 5px;
-            padding-right: 20px;
-            font-size: 14px;
-            color: #666;
+          .payment-details {
+            font-size: 11px;
+            color: #000;
           }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="title">${faniyaName}</div>
-          <div class="subtitle">דוח תשלומים - ${selectedMonth}.${selectedYear}</div>
+          <div class="subtitle">דוח תשלומים חודשי</div>
+          <div class="doc-title">חודש: ${HEBREW_MONTHS[selectedMonth - 1]} ${selectedYear}</div>
         </div>
         
-        <div class="section">
-          <h2>תשלומים שהתקבלו לחודש ${selectedMonth}.${selectedYear}</h2>
-          ${payments.length === 0 ? '<p style="text-align: center; color: #666;">אין תשלומים בחודש זה</p>' : ''}
-          ${payments.map((payment) => {
-            const paymentAmount = payment.totalAmount || payment.amount || 0;
-            const paymentDate = new Date(payment.paymentDate).toLocaleDateString('he-IL');
-            
-            let partsHtml = '';
-            if (payment.paymentParts && payment.paymentParts.length > 0) {
-              partsHtml = '<div class="payment-parts">' + 
-                payment.paymentParts.map((part: any) => 
-                  `• ${part.paymentType}: ₪${part.amount.toFixed(2)}${
-                    part.checkNumber ? ` (צ'ק ${part.checkNumber})` : ''
-                  }${
-                    part.bankReference ? ` (אסמכתא ${part.bankReference})` : ''
-                  }`
-                ).join('<br>') + 
-                '</div>';
-            }
-            
-            return `
-              <div class="payment-item">
-                <div>
-                  <div>${paymentDate}</div>
-                  ${partsHtml}
-                </div>
-                <div class="amount">₪${paymentAmount.toFixed(2)}</div>
+        ${payments.length === 0 ? '<p style="text-align: center; color: #333; font-size: 12px;">אין תשלומים בחודש זה</p>' : `
+          <div style="margin: 20px 0;">
+              ${payments.map((payment) => {
+                const paymentAmount = payment.totalAmount || payment.amount || 0;
+                const paymentDate = new Date(payment.paymentDate).toLocaleDateString('he-IL');
+                
+                if (payment.paymentParts && payment.paymentParts.length > 0) {
+                  return payment.paymentParts.map((part: any) => 
+                    `<div class="payment-row">
+                      <span>${paymentDate} - ${part.paymentType}${
+                        part.checkNumber ? ` (צ'ק ${part.checkNumber})` : ''
+                      }${
+                        part.bankReference ? ` (אסמכתא ${part.bankReference})` : ''
+                      }</span>
+                      <span class="amount">₪${part.amount.toFixed(2)}</span>
+                    </div>`
+                  ).join('');
+                } else {
+                  return `<div class="payment-row">
+                    <span>${paymentDate} - תשלום</span>
+                    <span class="amount">₪${paymentAmount.toFixed(2)}</span>
+                  </div>`;
+                }
+              }).join('')}
+              <div class="payment-row total-row">
+                <span>סה"כ תשלומים</span>
+                <span class="amount">₪${totalPayments.toFixed(2)}</span>
               </div>
-            `;
-          }).join('')}
-          
-          <div class="total">
-            סה"כ תשלומים: <span class="amount">₪${totalPayments.toFixed(2)}</span>
           </div>
-        </div>
+        `}
 
-        <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666;">
-          דוח נוצר ב: ${new Date().toLocaleDateString('he-IL')} ${new Date().toLocaleTimeString('he-IL')}
+        <div class="footer">
+          דוח נוצר ב: ${new Date().toLocaleDateString('he-IL')} | ${new Date().toLocaleTimeString('he-IL')}
         </div>
       </body>
       </html>
@@ -247,23 +269,23 @@ export function PaymentsOnlyReport({ faniyaId, faniyaName }: PaymentsOnlyReportP
 
       {!loading && payments.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>תשלומים לחודש {selectedMonth}.{selectedYear}</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold">תשלומים לחודש {selectedMonth}.{selectedYear}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-6">
+            <div className="space-y-0">
               {payments.map((payment) => (
-                <div key={payment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span>{new Date(payment.paymentDate).toLocaleDateString('he-IL')}</span>
-                  <span className="font-bold text-green-600">
+                <div key={payment.id} className="flex justify-between items-center py-2">
+                  <span className="text-sm">{new Date(payment.paymentDate).toLocaleDateString('he-IL')}</span>
+                  <span className="font-bold">
                     ₪{(payment.totalAmount || payment.amount || 0).toFixed(2)}
                   </span>
                 </div>
               ))}
-              <div className="border-t-2 border-gray-300 pt-4 mt-4">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>סה"כ תשלומים:</span>
-                  <span className="text-green-600">₪{totalPayments.toFixed(2)}</span>
+              <div className="border-t border-gray-800 pt-3 mt-3">
+                <div className="grid items-center w-full gap-4" style={{gridTemplateColumns: '1fr auto'}}>
+                  <span className="font-bold text-sm">סה"כ תשלומים:</span>
+                  <span className="font-bold">₪{totalPayments.toFixed(2)}</span>
                 </div>
               </div>
             </div>

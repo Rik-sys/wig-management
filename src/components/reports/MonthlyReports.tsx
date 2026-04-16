@@ -877,71 +877,111 @@ const loadMonthlyData = async (year: number, month: number) => {
             font-family: Arial, sans-serif; 
             direction: rtl; 
             text-align: right;
-            padding: 40px;
-            line-height: 1.8;
+            padding: 20px;
+            line-height: 1.5;
+            margin: 0;
           }
           .header {
             text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
           }
           .title {
-            font-size: 28px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 3px;
+            color: #000;
           }
           .subtitle {
-            font-size: 20px;
-            color: #666;
+            font-size: 12px;
+            color: #000;
+            margin-bottom: 2px;
           }
-          .section {
-            margin: 30px 0;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 8px;
+          .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 20px 0 12px 0;
+            padding-bottom: 5px;
+            color: #000;
           }
-          .item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
+          .section-container {
+            padding-bottom: 15px;
+            margin-bottom: 20px;
           }
-          .item:last-child {
-            border-bottom: none;
+          .section-container:last-of-type {
+            margin-bottom: 0;
+            padding-bottom: 0;
           }
-          .sub-item {
-            padding: 8px 8px 8px 30px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #666;
-            background: #fafafa;
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 11px;
+          }
+          th {
+            padding: 8px 5px;
+            font-weight: bold;
+            border: none;
+            text-align: right;
+            color: #000;
+          }
+          td {
+            padding: 6px 5px;
+            border: none;
+            text-align: right;
+            color: #000;
+          }
+          tr {
+            border: none;
           }
           .amount {
             font-weight: bold;
+            color: #000;
+          }
+          .payment-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            padding: 6px 0;
+            font-size: 11px;
+            align-items: center;
+          }
+          .payment-row.total-row {
+            border-top: 1px solid #000;
+            font-weight: bold;
+            padding-top: 8px;
+            margin-top: 8px;
           }
           .positive {
             color: #16a34a;
+            font-weight: bold;
           }
           .negative {
             color: #dc2626;
-          }
-          .total {
-            font-size: 18px;
             font-weight: bold;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #333;
-            text-align: center;
+          }
+          .total-row {
+            border-top: 1px solid #000;
+            font-weight: bold;
           }
           .summary-box {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
+            padding: 12px;
+            margin: 0;
+          }
+          .summary-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 11px;
+            color: #000;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 0;
+            font-size: 10px;
+            color: #000;
+            text-align: center;
           }
         </style>
       </head>
@@ -952,112 +992,122 @@ const loadMonthlyData = async (year: number, month: number) => {
         </div>
 
         ${adjustedPreviousMonthDebt !== 0 || previousMonthDebtUpdates.length > 0 ? `
-        <div class="section">
-          <h2>יתרת חוב מחודש קודם</h2>
-          <div class="item">
-            <span>חוב מחודש קודם:</span>
-            <span class="amount ${monthlyData.previousMonthDebt > 0 ? 'negative' : 'positive'}">
-              ₪${monthlyData.previousMonthDebt.toFixed(2)}
-            </span>
+        <div class="section-container">
+          ${previousMonthDebtUpdates.length === 0 ? `
+          <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px 0;">
+            <span>יתרת חוב מחודש קודם</span>
+            <span class="amount ${adjustedPreviousMonthDebt > 0 ? 'negative' : 'positive'}">₪${adjustedPreviousMonthDebt.toFixed(2)}</span>
           </div>
-          
-          ${previousMonthDebtUpdates.length > 0 ? `
-            ${previousMonthDebtUpdates.map(transaction => `
-              <div class="sub-item">
-                <span>${new Date(transaction.createdAt).toLocaleDateString('he-IL')} - ${transaction.description}</span>
-                <span class="amount ${transaction.amount > 0 ? 'negative' : 'positive'}">
-                  ${transaction.amount > 0 ? '+' : ''}₪${transaction.amount.toFixed(2)}
-                </span>
-              </div>
-            `).join('')}
-            <div class="total" style="font-size: 16px;">
-              סה"כ חוב מחודש קודם: <span class="amount ${adjustedPreviousMonthDebt > 0 ? 'negative' : 'positive'}">₪${adjustedPreviousMonthDebt.toFixed(2)}</span>
+          ` : `
+          <div class="section-title">יתרת חוב מחודש קודם</div>
+          <div style="margin: 15px 0;">
+            <div class="payment-row">
+              <span>יתרת חוב ממקודם</span>
+              <span class="amount ${monthlyData.previousMonthDebt > 0 ? 'negative' : 'positive'}">
+                ₪${monthlyData.previousMonthDebt.toFixed(2)}
+              </span>
             </div>
-          ` : ''}
+              ${previousMonthDebtUpdates.map(transaction => `
+                <div class="payment-row">
+                  <span>${new Date(transaction.createdAt).toLocaleDateString('he-IL')} - ${transaction.description}</span>
+                  <span class="amount ${transaction.amount > 0 ? 'negative' : 'positive'}">
+                    ${transaction.amount > 0 ? '+' : ''}₪${transaction.amount.toFixed(2)}
+                  </span>
+                </div>
+              `).join('')}
+              <div class="payment-row total-row">
+                <span>סה"כ חוב מחודש קודם</span>
+                <span class="amount ${adjustedPreviousMonthDebt > 0 ? 'negative' : 'positive'}">₪${adjustedPreviousMonthDebt.toFixed(2)}</span>
+              </div>
+          </div>
+          `}
         </div>
         ` : ''}
         
-        <div class="section">
-          <h2>סה"כ פעולות לחודש ${monthlyData.month}.${monthlyData.year}</h2>
-          ${monthlyData.orders.length === 0 && regularDebtUpdates.length === 0 ? '<p style="text-align: center; color: #666;">אין פעולות בחודש זה</p>' : ''}
-          
-          ${monthlyData.orders.map((order) => `
-            <div class="item">
-              <span>הזמנת פאה - ${order.customerName}</span>
-              <span class="amount negative">₪${order.totalPrice.toFixed(2)}</span>
-            </div>
-          `).join('')}
-          
-          ${regularDebtUpdates.map((transaction) => `
-            <div class="item">
-              <span>${new Date(transaction.createdAt).toLocaleDateString('he-IL')} - ${transaction.description}</span>
-              <span class="amount ${transaction.amount > 0 ? 'negative' : 'positive'}">
-                ${transaction.amount > 0 ? '+' : ''}₪${transaction.amount.toFixed(2)}
-              </span>
-            </div>
-          `).join('')}
-          
-          ${monthlyData.orders.length > 0 || regularDebtUpdates.length > 0 ? `
-          <div class="total">
-            סה"כ לתשלום ל-${monthlyData.month}.${monthlyData.year}: <span class="amount negative">₪${(monthlyData.totalRevenue + totalRegularDebtUpdates).toFixed(2)}</span>
-          </div>
-          ` : ''}
-        </div>
-
-        <div class="section">
-          <h2>סה"כ תשלומים שהתקבלו לחודש ${monthlyData.month}.${monthlyData.year}</h2>
-          ${monthlyData.payments.length === 0 ? '<p style="text-align: center; color: #666;">אין תשלומים בחודש זה</p>' : ''}
-          ${monthlyData.payments.map((payment) => {
-            const paymentAmount = payment.totalAmount || payment.amount || 0;
-            const paymentDate = new Date(payment.paymentDate).toLocaleDateString('he-IL');
-            
-            let partsHtml = '';
-            if (payment.paymentParts && payment.paymentParts.length > 0) {
-              partsHtml = payment.paymentParts.map((part: any) => 
-                `<div class="sub-item">
-                  <span>• ${part.paymentType}${
-                    part.checkNumber ? ` (צ'ק ${part.checkNumber})` : ''
-                  }${
-                    part.bankReference ? ` (אסמכתא ${part.bankReference})` : ''
-                  }</span>
-                  <span class="amount positive">₪${part.amount.toFixed(2)}</span>
-                </div>`
-              ).join('');
-            }
-            
-            return `
-              <div class="item">
-                <span>${paymentDate}</span>
-                <span class="amount positive">₪${paymentAmount.toFixed(2)}</span>
+        <div class="section-container">
+          <div class="section-title">סה"כ פעולות לחודש ${monthlyData.month}.${monthlyData.year}</div>
+          ${monthlyData.orders.length === 0 && regularDebtUpdates.length === 0 ? '<p style="text-align: center; color: #333; font-size: 12px;">אין פעולות בחודש זה</p>' : `
+          <div style="margin: 15px 0;">
+              ${monthlyData.orders.map((order) => `
+                <div class="payment-row">
+                  <span>הזמנת פאה - ${order.customerName}</span>
+                  <span class="amount negative">₪${order.totalPrice.toFixed(2)}</span>
+                </div>
+              `).join('')}
+              
+              ${regularDebtUpdates.map((transaction) => `
+                <div class="payment-row">
+                  <span>${new Date(transaction.createdAt).toLocaleDateString('he-IL')} - ${transaction.description}</span>
+                  <span class="amount ${transaction.amount > 0 ? 'negative' : 'positive'}">
+                    ${transaction.amount > 0 ? '+' : ''}₪${transaction.amount.toFixed(2)}
+                  </span>
+                </div>
+              `).join('')}
+              
+              ${monthlyData.orders.length > 0 || regularDebtUpdates.length > 0 ? `
+              <div class="payment-row total-row">
+                <span>סה"כ לתשלום ל-${monthlyData.month}.${monthlyData.year}</span>
+                <span class="amount negative">₪${(monthlyData.totalRevenue + totalRegularDebtUpdates).toFixed(2)}</span>
               </div>
-              ${partsHtml}
-            `;
-          }).join('')}
-          
-          ${monthlyData.payments.length > 0 ? `
-          <div class="total">
-            סה"כ שולם בחודש ${monthlyData.month}.${monthlyData.year}: <span class="amount positive">₪${monthlyData.totalPayments.toFixed(2)}</span>
+              ` : ''}
           </div>
-          ` : ''}
+          `}
         </div>
 
-        <div class="summary-box">
-          <h2 style="text-align: center; margin-bottom: 20px;">סיכום</h2>
-          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+        <div class="section-container">
+          <div class="section-title">סה"כ תשלומים שהתקבלו לחודש ${monthlyData.month}.${monthlyData.year}</div>
+          ${monthlyData.payments.length === 0 ? '<p style="text-align: center; color: #333; font-size: 12px;">אין תשלומים בחודש זה</p>' : `
+          <div style="margin: 15px 0;">
+              ${monthlyData.payments.map((payment) => {
+                const paymentAmount = payment.totalAmount || payment.amount || 0;
+                const paymentDate = new Date(payment.paymentDate).toLocaleDateString('he-IL');
+                
+                if (payment.paymentParts && payment.paymentParts.length > 0) {
+                  return payment.paymentParts.map((part: any) => 
+                    `<div class="payment-row">
+                      <span>${paymentDate} • ${part.paymentType}${
+                        part.checkNumber ? ` (צ'ק ${part.checkNumber})` : ''
+                      }${
+                        part.bankReference ? ` (אסמכתא ${part.bankReference})` : ''
+                      }</span>
+                      <span class="amount positive">₪${part.amount.toFixed(2)}</span>
+                    </div>`
+                  ).join('');
+                } else {
+                  return `<div class="payment-row">
+                    <span>${paymentDate} - תשלום</span>
+                    <span class="amount positive">₪${paymentAmount.toFixed(2)}</span>
+                  </div>`;
+                }
+              }).join('')}
+              
+              ${monthlyData.payments.length > 0 ? `
+              <div class="payment-row total-row">
+                <span>סה"כ שולם בחודש ${monthlyData.month}.${monthlyData.year}</span>
+                <span class="amount positive">₪${monthlyData.totalPayments.toFixed(2)}</span>
+              </div>
+              ` : ''}
+          </div>
+          `}
+        </div>
+
+        <div class="section-container summary-box">
+          <div class="section-title" style="border: none; margin: 0 0 8px 0;">סיכום</div>
+          <div class="summary-item">
             <span>יתרת חוב מחודש קודם:</span>
             <span class="amount ${adjustedPreviousMonthDebt > 0 ? 'negative' : 'positive'}">
               ₪${adjustedPreviousMonthDebt.toFixed(2)}
             </span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+          <div class="summary-item">
             <span>סה"כ לתשלום ל-${monthlyData.month}.${monthlyData.year}:</span>
             <span class="amount negative">₪${(monthlyData.totalRevenue + totalRegularDebtUpdates).toFixed(2)}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd;">
+          <div class="summary-item">
             <span>סה"כ שולם בחודש ${monthlyData.month}.${monthlyData.year}:</span>
             <span class="amount positive">₪${monthlyData.totalPayments.toFixed(2)}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 20px 0 10px 0; font-size: 20px; font-weight: bold; border-top: 2px solid #333; margin-top: 10px;">
+          <div class="summary-item" style="padding-top: 8px; padding-bottom: 8px; border-top: 1px solid #000; margin-top: 8px; font-weight: bold;">
             <span>סה"כ יתרת חוב:</span>
             <span class="${(adjustedPreviousMonthDebt + monthlyData.totalRevenue + totalRegularDebtUpdates - monthlyData.totalPayments) > 0 ? 'negative' : 'positive'}">
               ₪${(adjustedPreviousMonthDebt + monthlyData.totalRevenue + totalRegularDebtUpdates - monthlyData.totalPayments).toFixed(2)}
@@ -1065,8 +1115,8 @@ const loadMonthlyData = async (year: number, month: number) => {
           </div>
         </div>
 
-        <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666;">
-          דוח נוצר ב: ${new Date().toLocaleDateString('he-IL')} ${new Date().toLocaleTimeString('he-IL')}
+        <div class="footer">
+          דוח נוצר ב: ${new Date().toLocaleDateString('he-IL')} | ${new Date().toLocaleTimeString('he-IL')}
         </div>
       </body>
       </html>
@@ -1206,14 +1256,14 @@ const loadMonthlyData = async (year: number, month: number) => {
           {/* יתרת חוב מחודש קודם */}
           {(adjustedPreviousMonthDebt !== 0 || previousMonthDebtUpdates.length > 0) && (
             <Card>
-              <CardHeader>
-                <CardTitle>יתרת חוב מחודש קודם</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-bold">יתרת חוב מחודש קודם</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                    <span className="font-medium">חוב מחודש קודם:</span>
-                    <span className={`font-bold ${monthlyData.previousMonthDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <CardContent className="pt-6">
+                <div className="space-y-0">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm">חוב מחודש קודם:</span>
+                    <span className="font-bold">
                       ₪{monthlyData.previousMonthDebt.toFixed(2)}
                     </span>
                   </div>
@@ -1221,22 +1271,22 @@ const loadMonthlyData = async (year: number, month: number) => {
                   {/* ✅ עדכוני חוב מחודש קודם */}
                   {previousMonthDebtUpdates.length > 0 && (
                     <>
-                      <div className="pr-6 space-y-2">
+                      <div className="pr-6 space-y-1">
                         {previousMonthDebtUpdates.map((transaction) => (
-                          <div key={transaction.id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
-                            <span className="text-gray-600">
+                          <div key={transaction.id} className="flex justify-between items-center py-1 text-sm">
+                            <span>
                               {new Date(transaction.createdAt).toLocaleDateString('he-IL')} - {transaction.description}
                             </span>
-                            <span className={`font-bold ${transaction.amount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            <span className="font-bold">
                               {transaction.amount > 0 ? '+' : ''}₪{transaction.amount.toFixed(2)}
                             </span>
                           </div>
                         ))}
                       </div>
-                      <div className="border-t-2 border-gray-300 pt-3 mt-3">
-                        <div className="flex justify-between items-center text-base font-bold">
-                          <span>סה"כ חוב מחודש קודם:</span>
-                          <span className={adjustedPreviousMonthDebt > 0 ? 'text-red-600' : 'text-green-600'}>
+                      <div className="border-t border-gray-800 pt-2 mt-2">
+                        <div className="grid items-center w-full gap-4" style={{gridTemplateColumns: '1fr auto'}}>
+                          <span className="text-base font-bold">סה"כ חוב מחודש קודם:</span>
+                          <span className="text-base font-bold">
                             ₪{adjustedPreviousMonthDebt.toFixed(2)}
                           </span>
                         </div>
@@ -1250,36 +1300,36 @@ const loadMonthlyData = async (year: number, month: number) => {
 
           {/* פעולות החודש - הזמנות ועדכוני חוב */}
           <Card>
-            <CardHeader>
-              <CardTitle>סה"כ פעולות לחודש {monthlyData.month}.{monthlyData.year}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold">סה"כ פעולות לחודש {monthlyData.month}.{monthlyData.year}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {monthlyData.orders.length === 0 && regularDebtUpdates.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">אין פעולות בחודש זה</p>
+                <p className="text-center py-8">אין פעולות בחודש זה</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-0">
                   {monthlyData.orders.map((order) => (
-                    <div key={order.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="font-medium">הזמנת פאה - {order.customerName}</span>
-                      <span className="font-bold text-blue-600">₪{order.totalPrice.toFixed(2)}</span>
+                    <div key={order.id} className="flex justify-between items-center py-2">
+                      <span className="text-sm">הזמנת פאה - {order.customerName}</span>
+                      <span className="font-bold">₪{order.totalPrice.toFixed(2)}</span>
                     </div>
                   ))}
                   
                   {regularDebtUpdates.map((transaction) => (
-                    <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="font-medium">
+                    <div key={transaction.id} className="flex justify-between items-center py-2">
+                      <span className="text-sm">
                         {new Date(transaction.createdAt).toLocaleDateString('he-IL')} - {transaction.description}
                       </span>
-                      <span className={`font-bold ${transaction.amount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      <span className="font-bold">
                         {transaction.amount > 0 ? '+' : ''}₪{transaction.amount.toFixed(2)}
                       </span>
                     </div>
                   ))}
                   
-                  <div className="border-t-2 border-gray-300 pt-4 mt-4">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>סה"כ לתשלום ל-{monthlyData.month}.{monthlyData.year}:</span>
-                      <span className="text-blue-600">₪{totalOperations.toFixed(2)}</span>
+                  <div className="border-t border-gray-800 pt-2 mt-3">
+                    <div className="grid items-center w-full gap-4" style={{gridTemplateColumns: '1fr auto'}}>
+                      <span className="font-bold">סה"כ לתשלום ל-{monthlyData.month}.{monthlyData.year}:</span>
+                      <span className="font-bold">₪{totalOperations.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -1289,26 +1339,26 @@ const loadMonthlyData = async (year: number, month: number) => {
 
           {/* תשלומים החודש */}
           <Card>
-            <CardHeader>
-              <CardTitle>סה"כ תשלומים שהתקבלו לחודש {monthlyData.month}.{monthlyData.year}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold">סה"כ תשלומים שהתקבלו לחודש {monthlyData.month}.{monthlyData.year}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {monthlyData.payments.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">אין תשלומים בחודש זה</p>
+                <p className="text-center py-8">אין תשלומים בחודש זה</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-0">
                   {monthlyData.payments.map((payment) => (
-                    <div key={payment.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span>{new Date(payment.paymentDate).toLocaleDateString('he-IL')}</span>
-                      <span className="font-bold text-green-600">
+                    <div key={payment.id} className="flex justify-between items-center py-2">
+                      <span className="text-sm">{new Date(payment.paymentDate).toLocaleDateString('he-IL')}</span>
+                      <span className="font-bold">
                         ₪{(payment.totalAmount || payment.amount || 0).toFixed(2)}
                       </span>
                     </div>
                   ))}
-                  <div className="border-t-2 border-gray-300 pt-4 mt-4">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>סה"כ תשלומים שהתקבלו:</span>
-                      <span className="text-green-600">₪{monthlyData.totalPayments.toFixed(2)}</span>
+                  <div className="border-t border-gray-800 pt-2 mt-3">
+                    <div className="grid items-center w-full gap-4" style={{gridTemplateColumns: '1fr auto'}}>
+                      <span className="font-bold">סה"כ תשלומים שהתקבלו:</span>
+                      <span className="font-bold">₪{monthlyData.totalPayments.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -1318,31 +1368,29 @@ const loadMonthlyData = async (year: number, month: number) => {
 
           {/* סיכום */}
           <Card>
-            <CardHeader>
-              <CardTitle>סיכום</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold">סיכום</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4 text-lg">
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <span>יתרת חוב מחודש קודם:</span>
-                  <span className={`font-bold ${adjustedPreviousMonthDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ₪{adjustedPreviousMonthDebt.toFixed(2)}
-                  </span>
+            <CardContent className="pt-6">
+              <div className="space-y-0">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm">יתרת חוב מחודש קודם:</span>
+                  <span className="font-bold">₪{adjustedPreviousMonthDebt.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span>סה"כ לתשלום ל-{monthlyData.month}.{monthlyData.year}:</span>
-                  <span className="font-bold text-blue-600">₪{totalOperations.toFixed(2)}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm">סה"כ לתשלום ל-{monthlyData.month}.{monthlyData.year}:</span>
+                  <span className="font-bold">₪{totalOperations.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span>סה"כ שולם בחודש {monthlyData.month}.{monthlyData.year}:</span>
-                  <span className="font-bold text-green-600">₪{monthlyData.totalPayments.toFixed(2)}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm">סה"כ שולם בחודש {monthlyData.month}.{monthlyData.year}:</span>
+                  <span className="font-bold">₪{monthlyData.totalPayments.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
+                <div className="grid items-center w-full gap-4 border-t border-gray-800 mt-3 pt-3" style={{gridTemplateColumns: '1fr auto'}}>
                   <span className="font-bold">סה"כ יתרת חוב:</span>
-                  <span className={`font-bold text-xl ${finalDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <span className="font-bold">
                     ₪{finalDebt.toFixed(2)}
                   </span>
                 </div>

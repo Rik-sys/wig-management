@@ -6,7 +6,11 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const faniyas = await prisma.faniya.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        totalDebt: true,
+        totalPayments: true,
         _count: {
           select: {
             orders: true,

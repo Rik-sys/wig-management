@@ -103,7 +103,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       where: {
         id: id
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        totalDebt: true,
+        totalPayments: true,
         _count: {
           select: {
             orders: true,
@@ -141,7 +145,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         id: id
       },
       data: updateData,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        totalDebt: true,
+        totalPayments: true,
         _count: {
           select: {
             orders: true,

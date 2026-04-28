@@ -6767,6 +6767,9 @@ export default function FaniyaPage() {
   };
 
   const handleEditOrder = (order: Order) => {
+    // בדיקה אם ה-pattern הוא ערך מותאם אישי (לא אחד מהאפשרויות הקבועות)
+    const isCustomPattern = !['ייבוש טבעי תנועה גדולה', 'ייבוש טבעי תנועה קטנה'].includes(order.pattern);
+    
     setEditingOrder(order);
     setEditOrderForm({
       customerName: order.customerName,
@@ -6776,8 +6779,8 @@ export default function FaniyaPage() {
       highlights: order.highlights,
       babyHairType: order.babyHairType || '',
       openingTone: order.openingTone || '',
-      pattern: order.pattern,
-      customPattern: '',
+      pattern: isCustomPattern ? 'אחר' : order.pattern,
+      customPattern: isCustomPattern ? order.pattern : '',
       notes: order.notes || '',
       discount: order.discount.toString(),
       sentToTrass: order.sentToTrass,
@@ -6829,6 +6832,22 @@ export default function FaniyaPage() {
     } catch (error) {
       alert('שגיאה בעדכון הזמנה');
     }
+  };
+
+  // טיפול בשינויים בטופס הזמנה חדשה
+  const handleInputChange = (field: string, value: any) => {
+    setOrderForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // טיפול בשינויים בטופס עריכת הזמנה
+  const handleEditInputChange = (field: string, value: any) => {
+    setEditOrderForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -7003,14 +7022,6 @@ export default function FaniyaPage() {
     } catch (error) {
       alert('שגיאה בעדכון הזמנה');
     }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setOrderForm(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleEditInputChange = (field: string, value: any) => {
-    setEditOrderForm((prev: any) => ({ ...prev, [field]: value }));
   };
 
   if (loading) {
